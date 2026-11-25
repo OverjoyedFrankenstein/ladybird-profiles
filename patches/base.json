@@ -1,0 +1,33 @@
+{
+  "description": "Blob ids of the upstream files that profiles.patch changes, as they were in the source it was made against. install.py uses them to find an upstream commit that the patch applies to exactly.",
+  "new_files": [
+    "Base/res/ladybird/about-pages/settings/profiles.js",
+    "Documentation/Profiles.md",
+    "UI/Qt/ProfileDialog.cpp",
+    "UI/Qt/ProfileDialog.h"
+  ],
+  "base_blobs": {
+    "Base/res/ladybird/about-pages/settings.html": "bb3ccc091384472eb74a7146c75dc8af3a76bf11",
+    "Documentation/README.md": "838b6ec6842c1e3c50c9b1299871e044ae8397a5",
+    "Libraries/LibWebView/Application.cpp": "21f7fd708bfe0d1f97575acd1a9c433d572bceaa",
+    "Libraries/LibWebView/Application.h": "a12350ecd023c5fbde72e36defe62c8c349279cf",
+    "Libraries/LibWebView/Profile.cpp": "918ec037d25df8b3f5822bedbcab8c0ab7d82a9a",
+    "Libraries/LibWebView/Profile.h": "2de8981c5383b9740a20b48cc717c3a56bad83eb",
+    "Libraries/LibWebView/WebUI/SettingsUI.cpp": "6969e29d183b711a8f9b5a70404efee3de417f4d",
+    "Libraries/LibWebView/WebUI/SettingsUI.h": "e1b01836763fce6a2c1bc2a7db97ac3472513952",
+    "README.md": "4d45336769487dfe98a38bb3f24df9443074b9ec",
+    "Services/Hub/Application.cpp": "f862c0790f1f90edcab9d42778f87d614f3f3d15",
+    "Services/Hub/Application.h": "6b2637cc6898b0a0c9031b7d29c7092ff1b212f9",
+    "Services/Hub/HubClient.ipc": "71f8f5fdcec211ec9ca8fa9aed27f560ed8aa005",
+    "Tests/LibWebView/TestProfile.cpp": "574c4bb85d840c301757eb30ee0ed95126b4580c",
+    "UI/Qt/Application.cpp": "52cb0276c797183b457dc9bfa8c6705a3f82d6fd",
+    "UI/Qt/Application.h": "ec2c13691519134698556b0f54e37c67e84a94b7",
+    "UI/Qt/BrowserWindow.cpp": "a6035143824fa25c85443b4eef45081dfbf31ca5",
+    "UI/Qt/CMakeLists.txt": "f26f17c72715ff45272730879263738b102a5c30",
+    "UI/Qt/ChromeStyle.cpp": "29072dd46a84c3f0dd885313b91ceaaa4b0d81e4",
+    "UI/Qt/ChromeStyle.h": "fdc9687280065fbd8c90ac64418e97fee40f9d06",
+    "UI/Qt/HubConnection.cpp": "73aa083f8a742076cd3c9fd571e1c48ca8b49bce",
+    "UI/Qt/HubConnection.h": "b4eeba82454f31408825f3573e98c08853d42dee",
+    "UI/cmake/ResourceFiles.cmake": "c76122eb8eef34ab586d16186a9723156488c880"
+  }
+}

@@ -1,0 +1,2717 @@
+diff --git a/Base/res/ladybird/about-pages/settings.html b/Base/res/ladybird/about-pages/settings.html
+index bb3ccc091384472eb74a7146c75dc8af3a76bf11..cb680fb43cbe41408704ab4508b5ce1b96a39ccf 100644
+--- a/Base/res/ladybird/about-pages/settings.html
++++ b/Base/res/ladybird/about-pages/settings.html
+@@ -765,6 +765,52 @@
+                 padding: 16px 0 6px;
+             }
+ 
++            .profile-error {
++                color: var(--error);
++            }
++
++            .profile-settings-button {
++                flex-shrink: 0;
++                width: 28px;
++                height: 28px;
++            }
++
++            .profile-settings-button svg {
++                width: 16px;
++                height: 16px;
++            }
++
++            .profile-settings-button:disabled {
++                opacity: 0.5;
++                cursor: default;
++            }
++
++            .profile-settings-button:disabled:hover {
++                background: none;
++            }
++
++            .profile-actions-menu .menu-item:disabled {
++                opacity: 0.5;
++                cursor: default;
++            }
++
++            .profile-actions-menu .menu-item:disabled:hover {
++                background: none;
++            }
++
++            #profile-switch-list {
++                margin-top: 12px;
++            }
++
++            /* The list clips what overflows its rows, so the menu is placed by the page rather than inside its row. */
++            .profile-actions-menu {
++                position: fixed;
++                top: auto;
++                right: auto;
++                min-width: 160px;
++                margin-top: 0;
++            }
++
+             .tab-panel > .list-section {
+                 padding-top: 40px;
+             }
+@@ -957,6 +1003,9 @@
+                 <button id="tab-button-browsing" class="tab-button" data-tab="browsing" role="tab">
+                     Startup and browsing
+                 </button>
++                <button id="tab-button-profiles" class="tab-button" data-tab="profiles" role="tab">
++                    Profile management
++                </button>
+                 <button id="tab-button-memory" class="tab-button" data-tab="memory" role="tab">Memory</button>
+                 <button id="tab-button-privacy" class="tab-button" data-tab="privacy" role="tab">
+                     Privacy and security
+@@ -1228,6 +1277,29 @@
+                 </div>
+             </div>
+ 
++            <div class="tab-panel" id="tab-profiles" data-title="Profile management">
++                <div class="card card-body">
++                    <div class="card-group list-section">
++                        <div class="list-heading">
++                            <span>Profiles</span>
++                            <button id="create-profile" class="link-button">Create profile…</button>
++                        </div>
++                        <p class="description">
++                            Each profile keeps its own history, bookmarks, settings and cookies. Open a profile from the
++                            Profiles menu. Ladybird starts with the primary profile.
++                        </p>
++                        <div id="profiles-list" class="boxed-list"></div>
++                        <div id="profile-actions-menu" class="menu-dropdown profile-actions-menu hidden" role="menu">
++                            <button id="profile-action-primary" class="menu-item" role="menuitem">Make primary</button>
++                            <button id="profile-action-close" class="menu-item" role="menuitem">Close</button>
++                            <button id="profile-action-rename" class="menu-item" role="menuitem">Rename…</button>
++                            <button id="profile-action-delete" class="menu-item" role="menuitem">Delete…</button>
++                        </div>
++                        <p id="profiles-status" class="description" role="alert" hidden></p>
++                    </div>
++                </div>
++            </div>
++
+             <div class="tab-panel" id="tab-memory" data-title="Memory">
+                 <h3 class="card-title">Tabs</h3>
+                 <div class="card">
+@@ -1689,6 +1761,64 @@
+             </div>
+         </dialog>
+ 
++        <dialog id="profile-name-dialog" closedby="any" aria-labelledby="profile-name-title">
++            <div class="dialog-header">
++                <h3 id="profile-name-title" class="dialog-title">Create profile</h3>
++                <button id="profile-name-close" class="close-button dialog-button" aria-label="Close">&times;</button>
++            </div>
++            <div class="dialog-form">
++                <div class="form-group">
++                    <label for="profile-name-input">
++                        Name
++                        <p class="description">Use lowercase letters, digits, hyphens and underscores.</p>
++                    </label>
++                    <input
++                        id="profile-name-input"
++                        type="text"
++                        maxlength="64"
++                        placeholder="work"
++                        spellcheck="false"
++                        autocomplete="off"
++                    />
++                    <p id="profile-name-error" class="description profile-error" role="alert" hidden></p>
++                </div>
++                <div class="dialog-controls">
++                    <button id="profile-name-save" class="primary-button" disabled>Create</button>
++                </div>
++            </div>
++        </dialog>
++
++        <dialog id="profile-switch-dialog" closedby="any" aria-labelledby="profile-switch-title">
++            <div class="dialog-header">
++                <h3 id="profile-switch-title" class="dialog-title">Switch profile</h3>
++                <button id="profile-switch-close" class="close-button dialog-button" aria-label="Close">&times;</button>
++            </div>
++            <div class="dialog-body" style="height: auto">
++                <p id="profile-switch-message"></p>
++                <div id="profile-switch-list" class="boxed-list"></div>
++                <p id="profile-switch-error" class="description profile-error" role="alert" hidden></p>
++                <div class="button-container">
++                    <button id="profile-switch-cancel" class="secondary-button">Cancel</button>
++                    <button id="profile-switch-create" class="primary-button" hidden>Create profile…</button>
++                </div>
++            </div>
++        </dialog>
++
++        <dialog id="profile-remove-dialog" closedby="any" aria-labelledby="profile-remove-title">
++            <div class="dialog-header">
++                <h3 id="profile-remove-title" class="dialog-title">Delete profile</h3>
++                <button id="profile-remove-close" class="close-button dialog-button" aria-label="Close">&times;</button>
++            </div>
++            <div class="dialog-body" style="height: auto">
++                <p id="profile-remove-message"></p>
++                <p id="profile-remove-error" class="description profile-error" role="alert" hidden></p>
++                <div class="button-container">
++                    <button id="profile-remove-cancel" class="secondary-button">Cancel</button>
++                    <button id="profile-remove-confirm" class="primary-button">Delete</button>
++                </div>
++            </div>
++        </dialog>
++
+         <dialog id="browsing-data-settings-dialog" closedby="any">
+             <div class="dialog-header">
+                 <h3 class="dialog-title">Clear browsing data</h3>
+@@ -1780,6 +1910,7 @@
+         <script src="resource://ladybird/about-pages/settings/network.js" type="module"></script>
+         <script src="resource://ladybird/about-pages/settings/permissions.js" type="module"></script>
+         <script src="resource://ladybird/about-pages/settings/privacy.js" type="module"></script>
++        <script src="resource://ladybird/about-pages/settings/profiles.js" type="module"></script>
+         <script src="resource://ladybird/about-pages/settings/search.js" type="module"></script>
+         <script src="resource://ladybird/about-pages/settings/services.js" type="module"></script>
+         <script src="resource://ladybird/about-pages/settings/startup.js" type="module"></script>
+diff --git a/Base/res/ladybird/about-pages/settings/profiles.js b/Base/res/ladybird/about-pages/settings/profiles.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f6e07775af96170292941132d3df98ad40125634
+--- /dev/null
++++ b/Base/res/ladybird/about-pages/settings/profiles.js
+@@ -0,0 +1,493 @@
++const profilesTabButton = document.querySelector("#tab-button-profiles");
++const profilesList = document.querySelector("#profiles-list");
++const profilesStatus = document.querySelector("#profiles-status");
++const createProfile = document.querySelector("#create-profile");
++
++const actionsMenu = document.querySelector("#profile-actions-menu");
++const actionPrimary = document.querySelector("#profile-action-primary");
++const actionClose = document.querySelector("#profile-action-close");
++const actionRename = document.querySelector("#profile-action-rename");
++const actionDelete = document.querySelector("#profile-action-delete");
++
++const nameDialog = document.querySelector("#profile-name-dialog");
++const nameTitle = document.querySelector("#profile-name-title");
++const nameClose = document.querySelector("#profile-name-close");
++const nameInput = document.querySelector("#profile-name-input");
++const nameError = document.querySelector("#profile-name-error");
++const nameSave = document.querySelector("#profile-name-save");
++
++const switchDialog = document.querySelector("#profile-switch-dialog");
++const switchClose = document.querySelector("#profile-switch-close");
++const switchTitle = document.querySelector("#profile-switch-title");
++const switchMessage = document.querySelector("#profile-switch-message");
++const switchList = document.querySelector("#profile-switch-list");
++const switchError = document.querySelector("#profile-switch-error");
++const switchCancel = document.querySelector("#profile-switch-cancel");
++const switchCreate = document.querySelector("#profile-switch-create");
++
++const removeDialog = document.querySelector("#profile-remove-dialog");
++const removeClose = document.querySelector("#profile-remove-close");
++const removeMessage = document.querySelector("#profile-remove-message");
++const removeError = document.querySelector("#profile-remove-error");
++const removeCancel = document.querySelector("#profile-remove-cancel");
++const removeConfirm = document.querySelector("#profile-remove-confirm");
++
++// Profile names become the names of directories, so they are limited to what every file system accepts.
++const PROFILE_NAME_PATTERN = /^[a-z0-9_-]+$/;
++
++let PROFILES = [];
++
++// The profile being renamed, or null while a profile is being created.
++let renamingProfile = null;
++let removingProfile = null;
++// The operation whose result the open dialog waits for.
++let pendingOperation = null;
++// The profile last asked to open, whose result is shown below the list.
++let pendingOpen = null;
++// The profile last asked to close, whose result is shown below the list or in the switch dialog.
++let pendingClose = null;
++// The profile last asked to become primary, whose result is shown below the list.
++let pendingPrimary = null;
++
++const asSentence = text => (/[.!?]$/.test(text) ? text : `${text}.`);
++
++const showMessage = (element, text) => {
++    element.textContent = text ? asSentence(text) : "";
++    element.hidden = !text;
++};
++
++function createProfileRow(profile) {
++    const row = document.createElement("div");
++
++    const tile = document.createElement("span");
++    tile.className = "letter-tile";
++    tile.setAttribute("aria-hidden", "true");
++    tile.textContent = profile.name.charAt(0).toUpperCase();
++
++    const name = document.createElement("span");
++    name.className = "item-name";
++    name.textContent = profile.name;
++
++    const notes = [];
++    if (profile.primary) notes.push("Primary");
++    if (profile.current) notes.push("This profile");
++    else if (profile.inUse) notes.push("Open in another window");
++    if (notes.length > 0) {
++        const description = document.createElement("span");
++        description.className = "description";
++        description.textContent = notes.join(" · ");
++        name.appendChild(description);
++    }
++
++    const open = document.createElement("button");
++    open.className = "link-button";
++    open.textContent = "Open";
++    open.setAttribute("aria-label", `Open ${profile.name} in a new window`);
++    open.addEventListener("click", () => {
++        pendingOpen = profile.name;
++        ladybird.sendMessage("openProfile", { name: profile.name });
++    });
++
++    // Making primary, closing, renaming and deleting are kept behind a menu, so that they aren't chosen by accident.
++    const settings = document.createElement("button");
++    settings.className = "menu-toggle profile-settings-button";
++    settings.innerHTML = gearSVG;
++    settings.setAttribute("aria-label", `More options for ${profile.name}`);
++    settings.setAttribute("aria-haspopup", "menu");
++    settings.setAttribute("aria-expanded", "false");
++    settings.title = "Make primary, close, rename or delete";
++    settings.addEventListener("click", event => {
++        event.stopPropagation();
++        if (menuProfile === profile && !actionsMenu.classList.contains("hidden")) closeActionsMenu();
++        else openActionsMenu(profile, settings);
++    });
++
++    row.append(tile, name, open, settings);
++    return row;
++}
++
++const gearSVG =
++    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">' +
++    '<path d="M19.18 9.51 L21.77 9.86 L21.77 14.14 L19.18 14.49 L18.84 15.32 L20.42 17.39 L17.39 20.42 L15.32 18.84 ' +
++    "L14.49 19.18 L14.14 21.77 L9.86 21.77 L9.51 19.18 L8.68 18.84 L6.61 20.42 L3.58 17.39 L5.16 15.32 L4.82 14.49 " +
++    "L2.23 14.14 L2.23 9.86 L4.82 9.51 L5.16 8.68 L3.58 6.61 L6.61 3.58 L8.68 5.16 L9.51 4.82 L9.86 2.23 L14.14 2.23 " +
++    'L14.49 4.82 L15.32 5.16 L17.39 3.58 L20.42 6.61 L18.84 8.68 Z" />' +
++    '<circle cx="12" cy="12" r="3" /></svg>';
++
++// The profile whose gear opened the menu, and that gear.
++let menuProfile = null;
++let menuAnchor = null;
++
++function openActionsMenu(profile, anchor) {
++    closeActionsMenu();
++    menuProfile = profile;
++    menuAnchor = anchor;
++    anchor.setAttribute("aria-expanded", "true");
++
++    // The primary profile is the one Ladybird starts with, so it can be made primary whether or not it's open.
++    actionPrimary.disabled = profile.primary;
++    actionPrimary.title = profile.primary ? "Ladybird already starts with this profile." : "";
++
++    // A profile can be closed while a Ladybird of this version runs with it. A profile that a Ladybird is running with
++    // can't be renamed or deleted under it.
++    actionClose.disabled = !profile.closable;
++    actionClose.title = profile.closable
++        ? ""
++        : profile.inUse
++          ? "This profile is open in another version of Ladybird. Close it from its own windows."
++          : "This profile isn’t open.";
++    actionRename.disabled = profile.inUse;
++    actionRename.title = !profile.inUse
++        ? ""
++        : profile.current
++          ? "Ladybird is using this profile. Switch to another profile first."
++          : "Close this profile to rename it.";
++    // The profile this window shows is deleted by switching to another one, which closes it first.
++    actionDelete.disabled = profile.inUse && !(profile.current && profile.closable);
++    actionDelete.title = !actionDelete.disabled
++        ? ""
++        : profile.closable
++          ? "Close this profile to delete it."
++          : "This profile is open in another version of Ladybird. Close it from its own windows.";
++
++    // The menu opens below the gear, lined up with its right edge, and above it if there's no room below.
++    actionsMenu.classList.remove("hidden");
++    const anchorRect = anchor.getBoundingClientRect();
++    const menuRect = actionsMenu.getBoundingClientRect();
++    const fitsBelow = anchorRect.bottom + 4 + menuRect.height <= window.innerHeight;
++    actionsMenu.style.top = `${fitsBelow ? anchorRect.bottom + 4 : anchorRect.top - 4 - menuRect.height}px`;
++    actionsMenu.style.left = `${Math.max(8, anchorRect.right - menuRect.width)}px`;
++
++    enabledActionItems()[0]?.focus();
++}
++
++const enabledActionItems = () =>
++    [actionPrimary, actionClose, actionRename, actionDelete].filter(item => !item.disabled);
++
++function closeActionsMenu({ restoreFocus = false } = {}) {
++    if (actionsMenu.classList.contains("hidden")) return;
++    actionsMenu.classList.add("hidden");
++    menuAnchor?.setAttribute("aria-expanded", "false");
++    if (restoreFocus) menuAnchor?.focus();
++    menuProfile = null;
++    menuAnchor = null;
++}
++
++actionClose.addEventListener("click", () => {
++    const profile = menuProfile;
++    closeActionsMenu();
++    if (!profile) return;
++
++    // Closing the profile that this window shows would leave nothing open, so another profile is opened in its place.
++    if (profile.current) {
++        openSwitchDialog(profile);
++        return;
++    }
++    pendingClose = profile.name;
++    ladybird.sendMessage("closeProfile", { name: profile.name });
++});
++
++actionPrimary.addEventListener("click", () => {
++    const profile = menuProfile;
++    closeActionsMenu();
++    if (!profile) return;
++    pendingPrimary = profile.name;
++    ladybird.sendMessage("setPrimaryProfile", { name: profile.name });
++});
++
++actionRename.addEventListener("click", () => {
++    const profile = menuProfile;
++    closeActionsMenu();
++    if (profile) openNameDialog(profile);
++});
++
++actionDelete.addEventListener("click", () => {
++    const profile = menuProfile;
++    closeActionsMenu();
++    if (!profile) return;
++    if (profile.current) openSwitchDialog(profile, { deleting: true });
++    else openRemoveDialog(profile);
++});
++
++actionsMenu.addEventListener("keydown", event => {
++    const items = enabledActionItems();
++    const index = items.indexOf(document.activeElement);
++    if (event.key === "Escape") {
++        event.preventDefault();
++        closeActionsMenu({ restoreFocus: true });
++    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
++        event.preventDefault();
++        const step = event.key === "ArrowDown" ? 1 : -1;
++        if (items.length > 0) items[(index + step + items.length) % items.length].focus();
++    } else if (event.key === "Tab") {
++        closeActionsMenu();
++    }
++});
++
++document.addEventListener("click", event => {
++    if (!actionsMenu.contains(event.target)) closeActionsMenu();
++});
++// The menu is placed where its gear was, so it goes away once the gear moves.
++window.addEventListener("scroll", () => closeActionsMenu(), true);
++window.addEventListener("resize", () => closeActionsMenu());
++
++function renderProfiles() {
++    closeActionsMenu();
++    profilesList.innerHTML = "";
++
++    if (PROFILES.length === 0) {
++        const placeholder = document.createElement("div");
++        placeholder.className = "description";
++        placeholder.textContent = "No profiles";
++        profilesList.appendChild(placeholder);
++        return;
++    }
++
++    for (const profile of PROFILES) profilesList.appendChild(createProfileRow(profile));
++}
++
++// Switches to another profile, and closes the one this window shows, or deletes it once it was closed.
++function openSwitchDialog(currentProfile, { deleting = false } = {}) {
++    const otherProfiles = PROFILES.filter(profile => profile.name !== currentProfile.name);
++    const verb = deleting ? "delete" : "close";
++
++    switchList.innerHTML = "";
++    showMessage(switchError, null);
++    switchList.hidden = otherProfiles.length === 0;
++    switchCreate.hidden = otherProfiles.length !== 0;
++
++    if (otherProfiles.length === 0) {
++        switchMessage.textContent = `You’re using “${currentProfile.name}”. Create another profile to switch to before you ${verb} it.`;
++    } else if (deleting) {
++        switchMessage.textContent = `You’re using “${currentProfile.name}”, so you need to switch to another profile to delete it. Choose a profile to switch to. “${currentProfile.name}” closes, and its history, bookmarks, settings, cookies and cached files are deleted from this computer. This can’t be undone.`;
++    } else {
++        switchMessage.textContent = `Choose a profile to switch to. “${currentProfile.name}” closes, and its tabs come back when you open it again.`;
++    }
++    switchTitle.textContent = deleting ? `Delete ${currentProfile.name}` : "Switch profile";
++
++    for (const profile of otherProfiles) {
++        const tile = document.createElement("span");
++        tile.className = "letter-tile";
++        tile.setAttribute("aria-hidden", "true");
++        tile.textContent = profile.name.charAt(0).toUpperCase();
++
++        const name = document.createElement("span");
++        name.className = "item-name";
++        name.textContent = profile.name;
++        if (profile.inUse) {
++            const description = document.createElement("span");
++            description.className = "description";
++            description.textContent = "Open in another window";
++            name.appendChild(description);
++        }
++
++        const choose = document.createElement("button");
++        choose.className = "link-button";
++        choose.textContent = deleting ? "Switch and delete" : "Switch";
++        choose.setAttribute(
++            "aria-label",
++            deleting ? `Switch to ${profile.name} and delete ${currentProfile.name}` : `Switch to ${profile.name}`
++        );
++        choose.addEventListener("click", () => {
++            for (const button of switchList.querySelectorAll("button")) button.disabled = true;
++            pendingClose = currentProfile.name;
++            ladybird.sendMessage("closeProfile", {
++                name: currentProfile.name,
++                openInstead: profile.name,
++                removeAfterClose: deleting,
++            });
++        });
++
++        const row = document.createElement("div");
++        row.append(tile, name, choose);
++        switchList.appendChild(row);
++    }
++
++    switchDialog.showModal();
++    setTimeout(() => (otherProfiles.length === 0 ? switchCreate : switchList.querySelector("button"))?.focus());
++}
++
++switchCancel.addEventListener("click", () => switchDialog.close());
++switchClose.addEventListener("click", () => switchDialog.close());
++switchCreate.addEventListener("click", () => {
++    switchDialog.close();
++    openNameDialog();
++});
++
++function profileNameProblem() {
++    const name = nameInput.value;
++
++    if (!name) return null;
++    if (!PROFILE_NAME_PATTERN.test(name)) return "Use only lowercase letters, digits, hyphens and underscores.";
++    if (renamingProfile && name === renamingProfile.name) return null;
++    if (PROFILES.some(profile => profile.name === name)) return `A profile named “${name}” already exists.`;
++    return null;
++}
++
++function updateNameDialog() {
++    const problem = profileNameProblem();
++    showMessage(nameError, problem);
++    nameInput.classList.toggle("error", !!problem);
++
++    const isUnchanged = renamingProfile && nameInput.value === renamingProfile.name;
++    nameSave.disabled = !nameInput.value || !!problem || isUnchanged || pendingOperation !== null;
++}
++
++function openNameDialog(profile = null) {
++    renamingProfile = profile;
++    pendingOperation = null;
++
++    nameTitle.textContent = profile ? `Rename ${profile.name}` : "Create profile";
++    nameSave.textContent = profile ? "Rename" : "Create";
++    nameInput.value = profile ? profile.name : "";
++    updateNameDialog();
++
++    nameDialog.showModal();
++    setTimeout(() => {
++        nameInput.focus();
++        nameInput.select();
++    });
++}
++
++function saveProfileName() {
++    if (nameSave.disabled) return;
++
++    if (renamingProfile) {
++        pendingOperation = "rename";
++        ladybird.sendMessage("renameProfile", { name: renamingProfile.name, newName: nameInput.value });
++    } else {
++        pendingOperation = "create";
++        ladybird.sendMessage("createProfile", { name: nameInput.value });
++    }
++    updateNameDialog();
++}
++
++function openRemoveDialog(profile) {
++    removingProfile = profile;
++    pendingOperation = null;
++
++    removeMessage.textContent = `Delete the profile “${profile.name}”? Its history, bookmarks, settings, cookies and cached files are deleted from this computer. This can’t be undone.`;
++    showMessage(removeError, null);
++    removeConfirm.disabled = false;
++
++    removeDialog.showModal();
++    setTimeout(() => removeCancel.focus());
++}
++
++nameInput.addEventListener("input", () => {
++    // Upper case letters are taken as they are typed, as lower case, which is all a profile name may contain.
++    const lowerCaseName = nameInput.value.toLowerCase();
++    if (lowerCaseName !== nameInput.value) {
++        const { selectionStart, selectionEnd } = nameInput;
++        nameInput.value = lowerCaseName;
++        nameInput.setSelectionRange(selectionStart, selectionEnd);
++    }
++    updateNameDialog();
++});
++
++nameInput.addEventListener("keydown", event => {
++    if (event.key === "Enter") saveProfileName();
++});
++
++nameSave.addEventListener("click", saveProfileName);
++nameClose.addEventListener("click", () => nameDialog.close());
++nameDialog.addEventListener("close", () => {
++    renamingProfile = null;
++    if (pendingOperation === "create" || pendingOperation === "rename") pendingOperation = null;
++});
++
++removeConfirm.addEventListener("click", () => {
++    if (!removingProfile) return;
++    pendingOperation = "remove";
++    removeConfirm.disabled = true;
++    ladybird.sendMessage("removeProfile", { name: removingProfile.name });
++});
++
++removeCancel.addEventListener("click", () => removeDialog.close());
++removeClose.addEventListener("click", () => removeDialog.close());
++removeDialog.addEventListener("close", () => {
++    removingProfile = null;
++    if (pendingOperation === "remove") pendingOperation = null;
++});
++
++createProfile.addEventListener("click", () => openNameDialog());
++
++// Profiles can be created, renamed or opened by another Ladybird at any time, so the list is read again when shown.
++profilesTabButton.addEventListener("click", () => ladybird.sendMessage("loadProfiles"));
++
++function handleProfileResult(result) {
++    if (result.operation === "load") {
++        showMessage(profilesStatus, result.error ? `Could not list the profiles: ${result.error}` : null);
++        return;
++    }
++
++    if (result.operation === "open") {
++        if (pendingOpen === null) return;
++        const name = pendingOpen;
++        pendingOpen = null;
++        showMessage(profilesStatus, result.error ? `Could not open “${name}”: ${result.error}` : null);
++        // The profile is in use once its Ladybird has started, which takes a moment.
++        if (!result.error) setTimeout(() => ladybird.sendMessage("loadProfiles"), 2000);
++        return;
++    }
++
++    if (result.operation === "primary") {
++        if (pendingPrimary === null) return;
++        const name = pendingPrimary;
++        pendingPrimary = null;
++        showMessage(profilesStatus, result.error ? `Could not make “${name}” primary: ${result.error}` : null);
++        return;
++    }
++
++    if (result.operation === "close") {
++        if (pendingClose === null) return;
++        const name = pendingClose;
++        pendingClose = null;
++        if (switchDialog.open) {
++            // On success, this window closes along with its profile.
++            if (result.error) {
++                showMessage(switchError, result.error);
++                for (const button of switchList.querySelectorAll("button")) button.disabled = false;
++            }
++            return;
++        }
++        showMessage(profilesStatus, result.error ? `Could not close “${name}”: ${result.error}` : null);
++        // The profile is no longer in use once its Ladybird has saved its windows and ended, which takes a moment.
++        if (!result.error) setTimeout(() => ladybird.sendMessage("loadProfiles"), 2000);
++        return;
++    }
++
++    if (result.operation !== pendingOperation) return;
++    pendingOperation = null;
++
++    if (result.operation === "remove") {
++        if (result.error) {
++            showMessage(removeError, result.error);
++            removeConfirm.disabled = false;
++        } else {
++            removeDialog.close();
++        }
++        return;
++    }
++
++    if (result.error) {
++        updateNameDialog();
++        showMessage(nameError, result.error);
++    } else {
++        nameDialog.close();
++    }
++}
++
++document.addEventListener("WebUILoaded", () => {
++    ladybird.sendMessage("loadProfiles");
++});
++
++document.addEventListener("WebUIMessage", event => {
++    if (event.detail.name === "loadProfiles") {
++        PROFILES = event.detail.data.profiles || [];
++        renderProfiles();
++        if (nameDialog.open) updateNameDialog();
++    } else if (event.detail.name === "profileResult") {
++        handleProfileResult(event.detail.data);
++    }
++});
+diff --git a/Documentation/Profiles.md b/Documentation/Profiles.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a5c98b905400541149d520ddcccc03f061b71466
+--- /dev/null
++++ b/Documentation/Profiles.md
+@@ -0,0 +1,143 @@
++# Profiles
++
++A profile holds everything that Ladybird keeps for one person or one purpose: settings, bookmarks, history, cookies,
++site data, permissions, saved sessions and the HTTP cache. Profiles are kept apart from each other, so signing in to a
++site in one profile does not sign you in to it in another.
++
++Each profile runs in a Ladybird of its own, with its own Hub and helper processes. Several profiles can be open at the
++same time, each in its own windows.
++
++## Using profiles
++
++### The Profiles menu
++
++The **Profiles** menu is in the menu bar, between **History** and **Inspect**, and in the Ladybird menu of each window,
++above **History**. It lists every profile, in alphabetical order, and checks the one that the window belongs to. The
++primary profile is marked **(Primary)**.
++
++* Choosing a profile opens a window of it. A profile that is not open is started in a new Ladybird. A profile that is
++  already open gets a new window.
++* **Primary Profile** lists every profile again, and checks the primary one. Choosing a profile there makes it primary.
++* **Create…** asks for the name of a new profile and adds it to the list.
++
++### The primary profile
++
++The primary profile is the one that Ladybird starts with when it is started without a profile option, such as from the
++Dock, the Applications folder or a desktop launcher. It is the usual profile (`default`, or `developer` in builds made
++from source) until another one is made primary, from the Profiles menu or from Settings. A Ladybird that is already
++running is not affected: the choice applies the next time Ladybird starts.
++
++* Renaming the primary profile keeps it primary under its new name.
++* Deleting the primary profile makes the usual profile primary again.
++* A Ladybird that restarts, such as after an update or a settings change that needs one, comes back with the profile
++  it was running with, even if another profile has been made primary since.
++
++### Profile management in Settings
++
++The **Profile management** section of `about:settings` lists every profile, and notes which one is primary. Each profile has an **Open** button and a
++gear button, whose menu has the following items:
++
++| Item | What it does |
++| --- | --- |
++| **Make primary** | Makes the profile the one that Ladybird starts with. It is greyed out for the profile that is already primary. |
++| **Close** | Closes every window of the profile. Its windows and tabs come back, and are loaded again, the next time the profile is opened, whatever the startup settings say. |
++| **Rename…** | Gives the profile a new name. All of its data moves with it. |
++| **Delete…** | Deletes the profile and all of its data from this computer. This cannot be undone. |
++
++A profile that a Ladybird is running with cannot be renamed, as its files are in use. Close it first.
++
++Closing or deleting the profile of the window that you are in first asks for another profile to switch to. That profile
++opens, and the one you were in closes. A profile that is deleted this way disappears from every list at once, and its
++data is removed as soon as its Ladybird has ended.
++
++**Close** is only offered for profiles that are open in the same build of Ladybird. An older build does not know how to
++close while keeping its windows, so its profiles have to be closed from their own windows.
++
++### Profile names
++
++Profile names are the names of directories, so they may only contain lowercase ASCII letters, digits, `-` and `_`.
++Uppercase letters that are typed into a name become lowercase.
++
++### From the command line
++
++| Option | Effect |
++| --- | --- |
++| `--profile=<name>` | Opens the named profile, creating it if it does not exist. |
++| `--profile-path=<absolute path>` | Uses a self-contained profile in the given directory. |
++| `--temporary-profile` | Uses an empty profile that is removed when Ladybird quits. |
++
++Without any of these, Ladybird uses the primary profile. Until another profile is made primary, that is the `default`
++profile in release builds, and the `developer` profile in builds made from source. A profile with one of those names
++that was renamed or deleted is created again, empty, the next time Ladybird starts with it as the primary profile.
++
++On macOS, `open -n -a Ladybird --args --profile=work` starts a profile from the terminal. Without `-n`, macOS brings the
++Ladybird that is already running to the front, and ignores the arguments.
++
++## Where profiles are stored
++
++A named profile has a directory in each of three places. On macOS, these are:
++
++| Directory | Contents |
++| --- | --- |
++| `~/Library/Application Support/Ladybird/Profiles/<name>/` | History, sessions, crash reports, content blocking lists, and the files that mark a running profile |
++| `~/Library/Preferences/Ladybird/Profiles/<name>/` | `Settings.json`, `Bookmarks.json` and `Permissions.json` |
++| `~/Library/Caches/Ladybird/Profiles/<name>/` | The HTTP cache |
++
++Which profile is primary is kept in `~/Library/Application Support/Ladybird/PrimaryProfile`, beside the profiles rather
++than in any one of them. The file holds the profile's name. A missing file, or one that names a profile that does not
++exist, means the usual profile.
++
++On Linux, the same layout is under `$XDG_DATA_HOME`, `$XDG_CONFIG_HOME` and `$XDG_CACHE_HOME`, and the files that
++mark a running profile are under `$XDG_RUNTIME_DIR`.
++
++## How it works
++
++`WebView::Profile` in `Libraries/LibWebView/Profile.h` lists, creates, renames and removes profiles. The UI uses it for
++the Profiles menu, and `WebView::SettingsUI` uses it for the Profile management section.
++
++### Telling whether a profile is in use
++
++A Ladybird that runs with a profile writes the PID of its Hub to `Ladybird.pid` in the profile, and removes the file
++when it ends. A Ladybird that is starting with a profile holds an exclusive lock on `startup.lock` in the profile until
++it has started. A profile is in use while the process named in `Ladybird.pid` is running, or while its startup lock is
++held. A PID file left behind by a Ladybird that crashed does not keep the profile in use.
++
++Renaming and removing a profile take its startup lock first, and keep it for as long as they change its directories, so
++that no Ladybird starts with the profile meanwhile. A rename that fails partway renames back the directories that it had
++renamed, so that a profile is never left split between two names.
++
++### Opening a profile
++
++The Profiles menu and the **Open** button both end up in `Ladybird::Application::open_profile()` in the UI process. The
++settings page runs in the Hub, which asks the UI with the `app_open_profile` message. A profile that the window belongs
++to gets a new window. Any other profile is started by running the Ladybird executable with `--profile=<name>`. A Ladybird
++that is already running with that profile takes the request, and opens a window, as it does for any other launch.
++
++### Closing a profile
++
++To close a profile, the settings page sends `SIGUSR1` to the Hub of the Ladybird that runs with it. The Hub passes the
++request on to its UI with the `app_close_keeping_session` message, and the UI quits the way it does when it restarts:
++the session store records that every window is to come back on the next launch. Only a Ladybird whose Hub runs the same
++executable as the one asking is sent the signal, as an older build would end at once on it, and lose its windows.
++
++Closing the profile of the window that asks opens the profile chosen to switch to first. The UI receives both requests
++in order, so the other profile has been started by the time this one quits.
++
++### Deleting a profile that is open
++
++A Ladybird cannot remove the profile that it runs with, so deleting the profile of the window that asks marks the
++profile with a `RemoveWhenClosed` file before it closes it. A marked profile is not listed any more. Each Ladybird
++removes the marked profiles that nothing uses as it starts, every 15 seconds afterwards, and whenever the settings page
++lists the profiles. Opening a marked profile by name with `--profile` removes the mark, and keeps the profile.
++Ladybirds that run tests, run headless, or are driven by WebDriver never remove profiles.
++
++## Testing
++
++The tests in `Tests/LibWebView/TestProfile.cpp` cover listing, renaming and removing profiles, refusing to change a
++profile that is in use or starting, removing profiles that were deleted while they were open, and choosing the primary
++profile, including keeping it through a rename and falling back to the usual profile once it is deleted:
++
++```sh
++cmake --build Build/release --target TestLibWebView
++LADYBIRD_SOURCE_DIR="$PWD" Build/release/bin/TestLibWebView --suite TestProfile
++```
+diff --git a/Documentation/README.md b/Documentation/README.md
+index 838b6ec6842c1e3c50c9b1299871e044ae8397a5..2c76452835d65de4373085bddf6b6359d35614a2 100644
+--- a/Documentation/README.md
++++ b/Documentation/README.md
+@@ -32,6 +32,7 @@ If you have any questions that are not answered here or in the [FAQ](FAQ.md), yo
+ ## Browser/LibWeb
+ * [General Architecture](ProcessArchitecture.md)
+ * [Omnibox Design](Omnibox.md)
++* [Profiles](Profiles.md)
+ * [LibWeb: From Loading to Painting](LibWebFromLoadingToPainting.md)
+ * [LibWeb: Browsing Contexts and Navigables](BrowsingContextsAndNavigables.md)
+ * [How to Add a CSS Property](CSSProperties.md)
+diff --git a/Libraries/LibWebView/Application.cpp b/Libraries/LibWebView/Application.cpp
+index 21f7fd708bfe0d1f97575acd1a9c433d572bceaa..5299850e4c1fb4cdfbfc28ac84dac84889346fa0 100644
+--- a/Libraries/LibWebView/Application.cpp
++++ b/Libraries/LibWebView/Application.cpp
+@@ -279,6 +279,11 @@ void Application::quit_for_signal()
+     m_event_loop->quit(0);
+ }
+ 
++void Application::close_keeping_session()
++{
++    quit_for_signal();
++}
++
+ bool Application::claim_cpu_profiler(ProcessType process_type)
+ {
+     if (m_cpu_profiler_claimed || m_browser_options.profile_tool != ProfileTool::CPU || m_browser_options.profile_helper_process != process_type)
+@@ -757,6 +762,21 @@ ErrorOr<void> Application::initialize(Main::Arguments const& arguments)
+         m_stats_log->start_sampling();
+     TRY(launch_services());
+ 
++    // A profile that was deleted while it was open is removed once its Ladybird has closed, by whichever Ladybird is
++    // running then. Browsers that are tested or driven leave the user's profiles alone.
++    if (m_web_content_options.is_test_mode == IsTestMode::No && !m_browser_options.headless_mode.has_value() && !m_browser_options.webdriver_browser_endpoint.has_value()) {
++        auto remove_closed_profiles = [] {
++            if (auto roots = Profile::platform_roots(); !roots.is_error())
++                (void)Profile::remove_named_profiles_marked_for_removal(roots.value());
++        };
++        m_profile_removal_timer = Core::Timer::create_repeating(AK::Duration::from_seconds(15), move(remove_closed_profiles));
++        m_profile_removal_timer->start();
++        Core::deferred_invoke([] {
++            if (auto roots = Profile::platform_roots(); !roots.is_error())
++                (void)Profile::remove_named_profiles_marked_for_removal(roots.value());
++        });
++    }
++
+     if (m_browser_options.enable_content_blocker == EnableContentBlocker::Yes) {
+         m_content_blocker_list_update_timer = Core::Timer::create_repeating(AK::Duration::from_seconds(24 * 60 * 60), [this] {
+             start_content_blocker_list_update(ContentBlockerListUpdateTrigger::Automatic);
+@@ -800,17 +820,12 @@ ErrorOr<void> Application::create_profile([[maybe_unused]] Optional<StringView>
+     }
+ #endif
+ 
+-    ProfileRoots profile_roots {
+-        .config = Core::StandardPaths::config_directory(),
+-        .data = Core::StandardPaths::user_data_directory(),
+-        .cache = Core::StandardPaths::cache_directory(),
+-        .runtime = TRY(Core::StandardPaths::runtime_directory()),
+-        .temporary = Core::StandardPaths::tempfile_directory(),
+-    };
+-#if defined(AK_OS_WINDOWS)
+-    // These StandardPaths values already contain "Ladybird" on Windows. Use their parents as the platform roots for profile layouts.
+-    profile_roots.data = LexicalPath { profile_roots.data }.parent().string();
+-    profile_roots.cache = LexicalPath { profile_roots.cache }.parent().string();
++    auto profile_roots = TRY(Profile::platform_roots());
++
++#if !defined(AK_OS_ANDROID)
++    // A Ladybird started without a profile selected starts with the primary profile.
++    if (!profile_selection.name.has_value() && !profile_selection.path.has_value() && !profile_selection.temporary)
++        profile_selection.name = Profile::primary_profile_name(profile_roots);
+ #endif
+ 
+     m_instance_data_directory = LexicalPath::join(profile_roots.data, "Ladybird"sv).string();
+@@ -1983,6 +1998,12 @@ ErrorOr<void> Application::launch_services()
+             }));
+         }
+     }
++
++    // NB: Without a handler, SIGUSR1 would end the browser as a crash does, so it is handled even when sessions are not
++    //     kept, in which case it is a quit.
++    m_session_signal_handlers.append(Core::EventLoop::register_signal(SIGUSR1, [this](int) {
++        close_keeping_session();
++    }));
+ #endif
+ 
+     // No need to monitor the system time zone if the TZ environment variable is set, as it overrides system preferences.
+diff --git a/Libraries/LibWebView/Application.h b/Libraries/LibWebView/Application.h
+index a12350ecd023c5fbde72e36defe62c8c349279cf..2b32133521d783ee595a8f4d9fe9a320305d6ab5 100644
+--- a/Libraries/LibWebView/Application.h
++++ b/Libraries/LibWebView/Application.h
+@@ -321,6 +321,9 @@ public:
+     virtual void activate_or_open_tab_with_url(URL::URL const&) const;
+     virtual void open_urls_in_new_tabs(ReadonlySpan<URL::URL>) const;
+     virtual void open_url_in_new_window(URL::URL const&, IsPrivate) { }
++    // Opens a window of the named profile: in this browser if it runs with that profile, or else in the browser of that
++    // profile, which is started if it isn't running.
++    virtual void open_profile(ByteString const&) { }
+     virtual void open_navigation_in_new_tab(Web::HTML::PreparedNavigationDescriptor, Web::HTML::ActivateTab, ViewImplementation const* source_view = nullptr) const;
+     virtual void open_navigation_in_new_window(Web::HTML::PreparedNavigationDescriptor, IsPrivate) { }
+ 
+@@ -467,6 +470,9 @@ protected:
+ 
+     // A run stopped by SIGINT or SIGTERM ends like a quit, rather than like a crash.
+     virtual void quit_for_signal();
++    // Quits so that the next launch with this profile brings back every window and tab, as after a restart. Another
++    // Ladybird asks for this with SIGUSR1, to close a profile without losing its windows.
++    virtual void close_keeping_session();
+ 
+     virtual void on_devtools_enabled() const { }
+     virtual void on_devtools_disabled() const { }
+@@ -647,6 +653,7 @@ private:
+     JsonValue m_site_compatibility_data;
+     Optional<Core::AnonymousBuffer> m_content_blocker_list_buffer;
+     RefPtr<Core::Timer> m_content_blocker_list_update_timer;
++    RefPtr<Core::Timer> m_profile_removal_timer;
+     ByteString m_instance_data_directory;
+ #if defined(LADYBIRD_HAS_UPDATE_CHECK)
+     OwnPtr<UpdateChecker> m_update_checker;
+diff --git a/Libraries/LibWebView/Profile.cpp b/Libraries/LibWebView/Profile.cpp
+index 918ec037d25df8b3f5822bedbcab8c0ab7d82a9a..2205a3664d8138d1d2b784edd0411e4104e190dd 100644
+--- a/Libraries/LibWebView/Profile.cpp
++++ b/Libraries/LibWebView/Profile.cpp
+@@ -7,17 +7,87 @@
+ #include <AK/CharacterTypes.h>
+ #include <AK/Hex.h>
+ #include <AK/LexicalPath.h>
++#include <AK/QuickSort.h>
+ #include <AK/Random.h>
+ #include <LibCore/Directory.h>
++#include <LibCore/File.h>
++#include <LibCore/StandardPaths.h>
++#include <LibCore/System.h>
+ #include <LibCrypto/Hash/Hash.h>
+ #include <LibFileSystem/FileSystem.h>
+ #include <LibWebView/Profile.h>
+ 
++#if !defined(AK_OS_WINDOWS)
++#    include <errno.h>
++#    include <signal.h>
++#    include <sys/file.h>
++#endif
++
+ namespace WebView {
+ 
++static ByteString profiles_directory(StringView root)
++{
++    return LexicalPath::join(root, "Ladybird"sv, "Profiles"sv).string();
++}
++
+ static ByteString profile_path(StringView root, StringView identifier)
+ {
+-    return LexicalPath::join(root, "Ladybird"sv, "Profiles"sv, identifier).string();
++    return LexicalPath::join(profiles_directory(root), identifier).string();
++}
++
++static ByteString removal_marker_path(StringView data_root, StringView name)
++{
++    return LexicalPath::join(profile_path(data_root, name), "RemoveWhenClosed"sv).string();
++}
++
++// Which profile is primary is shared by every profile, so it is kept beside them rather than in any one of them.
++static ByteString primary_profile_file_path(StringView data_root)
++{
++    return LexicalPath::join(data_root, "Ladybird"sv, "PrimaryProfile"sv).string();
++}
++
++static bool named_profile_exists(ProfileRoots const& roots, StringView name)
++{
++    return FileSystem::is_directory(profile_path(roots.data, name)) && !FileSystem::exists(removal_marker_path(roots.data, name));
++}
++
++static ErrorOr<Optional<ByteString>> read_primary_profile_name(ProfileRoots const& roots)
++{
++    auto path = primary_profile_file_path(roots.data);
++    if (!FileSystem::is_regular_file(path))
++        return OptionalNone {};
++
++    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
++    auto contents = TRY(file->read_until_eof());
++    auto name = StringView { contents }.trim_whitespace();
++    if (!Profile::is_valid_name(name))
++        return OptionalNone {};
++    return name.to_byte_string();
++}
++
++static ErrorOr<void> write_primary_profile_name(ProfileRoots const& roots, StringView name)
++{
++    auto path = primary_profile_file_path(roots.data);
++    TRY(Core::Directory::create(LexicalPath { path }.parent(), Core::Directory::CreateDirectories::Yes, 0700));
++
++    // NB: A name that is only partly written is not that of a profile, so a Ladybird starting meanwhile starts with the
++    //     default profile.
++    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate, 0600));
++    TRY(file->write_until_depleted(name.bytes()));
++    return {};
++}
++
++static ErrorOr<void> forget_primary_profile_name(ProfileRoots const& roots)
++{
++    if (auto path = primary_profile_file_path(roots.data); FileSystem::exists(path))
++        TRY(FileSystem::remove(path, FileSystem::RecursionMode::Disallowed));
++    return {};
++}
++
++static bool is_primary_profile_name(ProfileRoots const& roots, StringView name)
++{
++    auto primary = read_primary_profile_name(roots);
++    return !primary.is_error() && primary.value() == name;
+ }
+ 
+ static ErrorOr<void> create_profile_directories(ProfilePaths const& paths)
+@@ -145,6 +215,10 @@ ErrorOr<Profile> Profile::create(ProfileSelection const& selection, ProfileRoots
+ 
+     auto identifier = selection.name.value_or(DEFAULT_PROFILE_NAME);
+ 
++    // A profile that is opened by name is kept, even if it was marked to be removed once it was closed.
++    if (auto marker = removal_marker_path(roots.data, identifier); FileSystem::exists(marker))
++        TRY(FileSystem::remove(marker, FileSystem::RecursionMode::Disallowed));
++
+     ProfilePaths paths {
+         .config = profile_path(roots.config, identifier),
+         .data = profile_path(roots.data, identifier),
+@@ -158,6 +232,298 @@ ErrorOr<Profile> Profile::create(ProfileSelection const& selection, ProfileRoots
+     return Profile { move(identifier), move(paths) };
+ }
+ 
++ErrorOr<ProfileRoots> Profile::platform_roots()
++{
++    ProfileRoots roots {
++        .config = Core::StandardPaths::config_directory(),
++        .data = Core::StandardPaths::user_data_directory(),
++        .cache = Core::StandardPaths::cache_directory(),
++        .runtime = TRY(Core::StandardPaths::runtime_directory()),
++        .temporary = Core::StandardPaths::tempfile_directory(),
++    };
++#if defined(AK_OS_WINDOWS)
++    // These StandardPaths values already contain "Ladybird" on Windows. Use their parents as the platform roots for profile layouts.
++    roots.data = LexicalPath { roots.data }.parent().string();
++    roots.cache = LexicalPath { roots.cache }.parent().string();
++#endif
++    return roots;
++}
++
++ErrorOr<Vector<ByteString>> Profile::named_profiles(ProfileRoots const& roots)
++{
++    Vector<ByteString> names;
++
++    // A profile is known by its data directory, which also holds its identity.
++    auto directory = profiles_directory(roots.data);
++    if (!FileSystem::is_directory(directory))
++        return names;
++
++    TRY(Core::Directory::for_each_entry(directory, Core::DirIterator::SkipDots, [&](Core::DirectoryEntry const& entry, Core::Directory const&) -> ErrorOr<IterationDecision> {
++        if (entry.type == Core::DirectoryEntry::Type::Directory && is_valid_name(entry.name)
++            && !FileSystem::exists(removal_marker_path(roots.data, entry.name)))
++            names.append(entry.name);
++        return IterationDecision::Continue;
++    }));
++
++    quick_sort(names);
++    return names;
++}
++
++ErrorOr<ByteString> Profile::identity_of_named_profile(ProfileRoots const& roots, StringView name)
++{
++    if (!is_valid_name(name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++    return FileSystem::real_path(profile_path(roots.data, name));
++}
++
++// The directories of a named profile, each once. On some platforms, two of the roots are the same directory.
++static Vector<ByteString> directories_of_named_profile(ProfileRoots const& roots, StringView name)
++{
++    Vector<ByteString> directories;
++    for (auto const& root : { roots.config, roots.data, roots.cache, roots.runtime }) {
++        auto directory = profile_path(root, name);
++        if (!directories.contains_slow(directory))
++            directories.append(move(directory));
++    }
++    return directories;
++}
++
++// Keeps a Ladybird from starting with a profile, by holding the lock that a Ladybird takes as it starts with one.
++class ProfileStartupLock {
++    AK_MAKE_NONCOPYABLE(ProfileStartupLock);
++    AK_MAKE_DEFAULT_MOVABLE(ProfileStartupLock);
++
++public:
++    // Empty if a Ladybird is starting with the profile right now, as it holds the lock.
++    static ErrorOr<Optional<ProfileStartupLock>> try_to_take(ProfileRoots const& roots, StringView name)
++    {
++        auto runtime_directory = profile_path(roots.runtime, name);
++        if (!FileSystem::is_directory(runtime_directory))
++            return Optional<ProfileStartupLock> { ProfileStartupLock {} };
++
++        auto lock_file = TRY(Core::File::open(LexicalPath::join(runtime_directory, "startup.lock"sv).string(), Core::File::OpenMode::ReadWrite));
++#if !defined(AK_OS_WINDOWS)
++        if (flock(lock_file->fd(), LOCK_EX | LOCK_NB) != 0) {
++            if (errno == EWOULDBLOCK)
++                return Optional<ProfileStartupLock> {};
++            return Error::from_syscall("flock"sv, errno);
++        }
++#endif
++        return Optional<ProfileStartupLock> { ProfileStartupLock { move(lock_file) } };
++    }
++
++private:
++    explicit ProfileStartupLock(OwnPtr<Core::File> lock_file = {})
++        : m_lock_file(move(lock_file))
++    {
++    }
++
++    // NB: Closing the file releases the lock.
++    OwnPtr<Core::File> m_lock_file;
++};
++
++// The process that wrote the profile's PID file, if it is still running. Only a Ladybird that is running with the
++// profile has a PID file there, as it removes the file when it ends. One that crashed leaves it behind.
++static Optional<i32> running_process_in_pid_file(ProfileRoots const& roots, StringView name)
++{
++    auto pid_path = LexicalPath::join(profile_path(roots.runtime, name), "Ladybird.pid"sv).string();
++    auto file = Core::File::open(pid_path, Core::File::OpenMode::Read);
++    if (file.is_error())
++        return {};
++    auto contents = file.value()->read_until_eof();
++    if (contents.is_error())
++        return {};
++    auto pid = StringView { contents.value() }.trim_whitespace().to_number<i32>();
++    if (!pid.has_value() || *pid <= 0)
++        return {};
++#if defined(AK_OS_WINDOWS)
++    // FIXME: Find out whether the process is still running on Windows, rather than taking it to be.
++    return pid;
++#else
++    if (kill(*pid, 0) == 0 || errno == EPERM)
++        return pid;
++    return {};
++#endif
++}
++
++// NB: A PID file that can't be read is taken to belong to a running Ladybird, so that its profile is not changed.
++static bool browser_of_named_profile_is_running(ProfileRoots const& roots, StringView name)
++{
++    auto pid_path = LexicalPath::join(profile_path(roots.runtime, name), "Ladybird.pid"sv).string();
++    if (FileSystem::exists(pid_path)) {
++        auto file = Core::File::open(pid_path, Core::File::OpenMode::Read);
++        if (file.is_error() || file.value()->read_until_eof().is_error())
++            return true;
++    }
++    return running_process_in_pid_file(roots, name).has_value();
++}
++
++Optional<i32> Profile::browser_process_of_named_profile(ProfileRoots const& roots, StringView name)
++{
++    if (!is_valid_name(name))
++        return {};
++    return running_process_in_pid_file(roots, name);
++}
++
++// Takes the profile's startup lock, so that no Ladybird starts with it while it is changed, or fails if it is in use.
++static ErrorOr<ProfileStartupLock> lock_unused_named_profile(ProfileRoots const& roots, StringView name)
++{
++    if (!Profile::is_valid_name(name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++    if (!FileSystem::is_directory(profile_path(roots.data, name)))
++        return Error::from_string_literal("The profile does not exist");
++
++    auto lock = TRY(ProfileStartupLock::try_to_take(roots, name));
++    if (!lock.has_value() || browser_of_named_profile_is_running(roots, name))
++        return Error::from_string_literal("The profile is in use. Close the Ladybird that is using it first");
++    return lock.release_value();
++}
++
++ErrorOr<bool> Profile::is_named_profile_in_use(ProfileRoots const& roots, StringView name)
++{
++    if (!is_valid_name(name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++
++    auto lock = TRY(ProfileStartupLock::try_to_take(roots, name));
++    return !lock.has_value() || browser_of_named_profile_is_running(roots, name);
++}
++
++ErrorOr<void> Profile::rename_named_profile(ProfileRoots const& roots, StringView name, StringView new_name)
++{
++    if (!is_valid_name(new_name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++    if (name == new_name)
++        return {};
++
++    auto lock = TRY(lock_unused_named_profile(roots, name));
++
++    auto directories = directories_of_named_profile(roots, name);
++    auto new_directories = directories_of_named_profile(roots, new_name);
++    VERIFY(directories.size() == new_directories.size());
++
++    for (auto const& new_directory : new_directories) {
++        if (FileSystem::exists(new_directory))
++            return Error::from_string_literal("A profile with that name already exists");
++    }
++
++    // A profile is renamed as a whole or not at all, so the directories renamed before a failure are renamed back.
++    for (size_t i = 0; i < directories.size(); ++i) {
++        if (!FileSystem::exists(directories[i]))
++            continue;
++        if (auto result = Core::System::rename(directories[i], new_directories[i]); result.is_error()) {
++            for (size_t j = 0; j < i; ++j) {
++                if (FileSystem::exists(new_directories[j]))
++                    (void)Core::System::rename(new_directories[j], directories[j]);
++            }
++            return result.release_error();
++        }
++    }
++
++    // NB: The profile was renamed, so failing to keep it primary only makes the default profile primary again.
++    if (is_primary_profile_name(roots, name)) {
++        if (auto result = write_primary_profile_name(roots, new_name); result.is_error())
++            warnln("Unable to keep the renamed profile '{}' primary: {}", new_name, result.error());
++    }
++    return {};
++}
++
++ErrorOr<void> Profile::remove_named_profile(ProfileRoots const& roots, StringView name)
++{
++    auto lock = TRY(lock_unused_named_profile(roots, name));
++
++    // NB: The data directory goes last, as the profile is listed for as long as it exists. A removal that fails partway
++    //     leaves the profile listed, so that it can be removed again.
++    auto directories = directories_of_named_profile(roots, name);
++    auto data_directory = profile_path(roots.data, name);
++    directories.remove_all_matching([&](auto const& directory) { return directory == data_directory; });
++    directories.append(move(data_directory));
++
++    for (auto const& directory : directories) {
++        if (FileSystem::exists(directory))
++            TRY(FileSystem::remove(directory, FileSystem::RecursionMode::Allowed));
++    }
++
++    // A profile created later with the same name is a new profile, which is not primary.
++    if (is_primary_profile_name(roots, name)) {
++        if (auto result = forget_primary_profile_name(roots); result.is_error())
++            warnln("Unable to forget the deleted primary profile '{}': {}", name, result.error());
++    }
++    return {};
++}
++
++ErrorOr<void> Profile::mark_named_profile_for_removal(ProfileRoots const& roots, StringView name)
++{
++    if (!is_valid_name(name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++    if (!FileSystem::is_directory(profile_path(roots.data, name)))
++        return Error::from_string_literal("The profile does not exist");
++
++    auto marker = TRY(Core::File::open(removal_marker_path(roots.data, name), Core::File::OpenMode::Write));
++    marker->close();
++    return {};
++}
++
++ErrorOr<void> Profile::unmark_named_profile_for_removal(ProfileRoots const& roots, StringView name)
++{
++    if (!is_valid_name(name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++    if (auto marker = removal_marker_path(roots.data, name); FileSystem::exists(marker))
++        TRY(FileSystem::remove(marker, FileSystem::RecursionMode::Disallowed));
++    return {};
++}
++
++bool Profile::is_named_profile_marked_for_removal(ProfileRoots const& roots, StringView name)
++{
++    return is_valid_name(name) && FileSystem::exists(removal_marker_path(roots.data, name));
++}
++
++size_t Profile::remove_named_profiles_marked_for_removal(ProfileRoots const& roots)
++{
++    auto directory = profiles_directory(roots.data);
++    if (!FileSystem::is_directory(directory))
++        return 0;
++
++    Vector<ByteString> marked;
++    auto result = Core::Directory::for_each_entry(directory, Core::DirIterator::SkipDots, [&](Core::DirectoryEntry const& entry, Core::Directory const&) -> ErrorOr<IterationDecision> {
++        if (entry.type == Core::DirectoryEntry::Type::Directory && is_valid_name(entry.name) && FileSystem::exists(removal_marker_path(roots.data, entry.name)))
++            marked.append(entry.name);
++        return IterationDecision::Continue;
++    });
++    if (result.is_error())
++        return 0;
++
++    // NB: A profile that is still in use is refused, and is removed by a later call, once it was closed.
++    size_t removed = 0;
++    for (auto const& name : marked) {
++        if (!remove_named_profile(roots, name).is_error())
++            ++removed;
++    }
++    return removed;
++}
++
++ByteString Profile::primary_profile_name(ProfileRoots const& roots)
++{
++    auto name = read_primary_profile_name(roots);
++    if (name.is_error()) {
++        warnln("Unable to read the primary Ladybird profile: {}", name.error());
++        return DEFAULT_PROFILE_NAME;
++    }
++
++    // A profile that was deleted, or is to be deleted once it is closed, is not brought back.
++    if (!name.value().has_value() || !named_profile_exists(roots, *name.value()))
++        return DEFAULT_PROFILE_NAME;
++    return name.release_value().release_value();
++}
++
++ErrorOr<void> Profile::set_primary_profile_name(ProfileRoots const& roots, StringView name)
++{
++    if (!is_valid_name(name))
++        return Error::from_string_literal("Profile names may only contain lowercase ASCII letters, digits, '_' and '-'");
++    if (!named_profile_exists(roots, name))
++        return Error::from_string_literal("The profile does not exist");
++    return write_primary_profile_name(roots, name);
++}
++
+ ErrorOr<Profile> Profile::create_legacy(ProfileRoots const& roots)
+ {
+     ProfilePaths paths {
+diff --git a/Libraries/LibWebView/Profile.h b/Libraries/LibWebView/Profile.h
+index 2de8981c5383b9740a20b48cc717c3a56bad83eb..2da1e91c4c0783d2968cf132a9086ee17f6fc511 100644
+--- a/Libraries/LibWebView/Profile.h
++++ b/Libraries/LibWebView/Profile.h
+@@ -9,6 +9,7 @@
+ #include <AK/ByteString.h>
+ #include <AK/Error.h>
+ #include <AK/Optional.h>
++#include <AK/Vector.h>
+ #include <LibCore/BrowserVersion.h>
+ #include <LibWebView/Export.h>
+ 
+@@ -48,6 +49,31 @@ public:
+ 
+     static ErrorOr<Profile> create(ProfileSelection const&, ProfileRoots const&);
+     static ErrorOr<Profile> create_legacy(ProfileRoots const&);
++    static ErrorOr<ProfileRoots> platform_roots();
++    // The names of the profiles that exist under the roots, in alphabetical order.
++    static ErrorOr<Vector<ByteString>> named_profiles(ProfileRoots const&);
++    // The identity that the named profile has once it is opened, which is its data directory.
++    static ErrorOr<ByteString> identity_of_named_profile(ProfileRoots const&, StringView name);
++    // Whether a Ladybird is running with the named profile, or is starting with it.
++    static ErrorOr<bool> is_named_profile_in_use(ProfileRoots const&, StringView name);
++    // The process of the Ladybird that is running with the named profile, if one is.
++    static Optional<i32> browser_process_of_named_profile(ProfileRoots const&, StringView name);
++    // Renaming or removing a profile is refused while it is in use, and while another profile has the new name.
++    static ErrorOr<void> rename_named_profile(ProfileRoots const&, StringView name, StringView new_name);
++    static ErrorOr<void> remove_named_profile(ProfileRoots const&, StringView name);
++
++    // A profile that is in use can be marked to be removed once it is closed. It is no longer listed from then on, and
++    // any Ladybird removes it once nothing uses it. Opening it by name takes the mark away again.
++    static ErrorOr<void> mark_named_profile_for_removal(ProfileRoots const&, StringView name);
++    static ErrorOr<void> unmark_named_profile_for_removal(ProfileRoots const&, StringView name);
++    static bool is_named_profile_marked_for_removal(ProfileRoots const&, StringView name);
++    // Removes the marked profiles that nothing uses any more, and returns how many it removed.
++    static size_t remove_named_profiles_marked_for_removal(ProfileRoots const&);
++
++    // The named profile that Ladybird starts with when no profile is selected. It is the default profile until another
++    // is made primary, and again once the primary profile is deleted.
++    static ByteString primary_profile_name(ProfileRoots const&);
++    static ErrorOr<void> set_primary_profile_name(ProfileRoots const&, StringView name);
+     static ByteString routing_identifier(StringView canonical_profile_root);
+     static bool is_valid_name(StringView);
+ 
+diff --git a/Libraries/LibWebView/WebUI/SettingsUI.cpp b/Libraries/LibWebView/WebUI/SettingsUI.cpp
+index 6969e29d183b711a8f9b5a70404efee3de417f4d..e4bc1d31ca81e5b327c9c92ad57a52c3443b8791 100644
+--- a/Libraries/LibWebView/WebUI/SettingsUI.cpp
++++ b/Libraries/LibWebView/WebUI/SettingsUI.cpp
+@@ -11,6 +11,8 @@
+ #include <LibCore/EventLoop.h>
+ #include <LibCore/GeolocationProvider.h>
+ #include <LibCore/Promise.h>
++#include <LibCore/System.h>
++#include <LibFileSystem/FileSystem.h>
+ #include <LibURL/Parser.h>
+ #include <LibWebCommon/HTML/AutoplayPolicy.h>
+ #include <LibWebView/Application.h>
+@@ -19,10 +21,18 @@
+ #include <LibWebView/CrashReportStore.h>
+ #include <LibWebView/DefaultBrowser.h>
+ #include <LibWebView/PermissionManager.h>
++#include <LibWebView/Profile.h>
+ #include <LibWebView/SearchEngine.h>
+ #include <LibWebView/WebContentClient.h>
+ #include <LibWebView/WebUI/SettingsUI.h>
+ 
++#if defined(AK_OS_MACOS)
++#    include <libproc.h>
++#endif
++#if !defined(AK_OS_WINDOWS)
++#    include <signal.h>
++#endif
++
+ namespace WebView {
+ 
+ static StringView config_variable_type_to_string(JsonValue::Type type)
+@@ -221,6 +231,28 @@ void SettingsUI::register_interfaces()
+         set_custom_content_blocker_filters(data);
+     });
+ 
++    register_interface("loadProfiles"sv, [this](auto const&) {
++        load_profiles();
++    });
++    register_interface("openProfile"sv, [this](auto const& data) {
++        open_profile(data);
++    });
++    register_interface("closeProfile"sv, [this](auto const& data) {
++        close_profile(data);
++    });
++    register_interface("createProfile"sv, [this](auto const& data) {
++        create_profile(data);
++    });
++    register_interface("renameProfile"sv, [this](auto const& data) {
++        rename_profile(data);
++    });
++    register_interface("removeProfile"sv, [this](auto const& data) {
++        remove_profile(data);
++    });
++    register_interface("setPrimaryProfile"sv, [this](auto const& data) {
++        set_primary_profile(data);
++    });
++
+     register_interface("setDNSSettings"sv, [this](auto const& data) {
+         set_dns_settings(data);
+     });
+@@ -896,4 +928,227 @@ void SettingsUI::set_dns_settings(JsonValue const& dns_settings)
+     Application::settings().set_dns_settings(Settings::parse_dns_settings(dns_settings));
+ }
+ 
++// The executable that a process runs, as a canonical path.
++static Optional<ByteString> executable_of_process([[maybe_unused]] i32 pid)
++{
++#if defined(AK_OS_MACOS)
++    char path[PROC_PIDPATHINFO_MAXSIZE];
++    if (proc_pidpath(pid, path, sizeof(path)) <= 0)
++        return {};
++    auto real_path = FileSystem::real_path(StringView { path, strlen(path) });
++    return real_path.is_error() ? Optional<ByteString> {} : real_path.release_value();
++#elif defined(AK_OS_LINUX)
++    auto real_path = FileSystem::real_path(ByteString::formatted("/proc/{}/exe", pid));
++    return real_path.is_error() ? Optional<ByteString> {} : real_path.release_value();
++#else
++    return {};
++#endif
++}
++
++// Whether the Ladybird running with a profile can be asked to close and keep its windows. That Ladybird has to be this
++// version, as an older one would take the request to be a signal to end at once, and lose its windows.
++static bool can_close_browser_process(i32 pid)
++{
++#if defined(AK_OS_WINDOWS)
++    // FIXME: Ask the Ladybird of another profile to close on Windows, which has no signals to ask it with.
++    (void)pid;
++    return false;
++#else
++    auto executable = Core::System::current_executable_path();
++    if (executable.is_error())
++        return false;
++    auto real_executable = FileSystem::real_path(executable.value());
++    auto executable_of_pid = executable_of_process(pid);
++    return !real_executable.is_error() && executable_of_pid.has_value() && *executable_of_pid == real_executable.value();
++#endif
++}
++
++void SettingsUI::load_profiles()
++{
++    JsonArray profiles;
++
++    struct RootsAndNames {
++        ProfileRoots roots;
++        Vector<ByteString> names;
++    };
++    auto roots_and_names = [&]() -> ErrorOr<RootsAndNames> {
++        auto roots = TRY(Profile::platform_roots());
++        (void)Profile::remove_named_profiles_marked_for_removal(roots);
++        auto names = TRY(Profile::named_profiles(roots));
++        return RootsAndNames { move(roots), move(names) };
++    }();
++    if (roots_and_names.is_error()) {
++        report_profile_result("load"sv, roots_and_names.release_error());
++        return;
++    }
++    auto [roots, names] = roots_and_names.release_value();
++
++    auto const& current_identity = Application::profile().paths().identity;
++    auto primary_name = Profile::primary_profile_name(roots);
++    for (auto const& name : names) {
++        auto identity = Profile::identity_of_named_profile(roots, name);
++        auto is_current = !identity.is_error() && identity.value() == current_identity;
++        // NB: A profile whose use cannot be found out is taken to be in use, so that it is not changed.
++        auto in_use = Profile::is_named_profile_in_use(roots, name);
++        auto is_in_use = is_current || in_use.is_error() || in_use.value();
++
++        JsonObject profile;
++        profile.set("name"sv, String::from_byte_string(name).release_value_but_fixme_should_propagate_errors());
++        profile.set("current"sv, is_current);
++        profile.set("inUse"sv, is_in_use);
++        profile.set("primary"sv, name == primary_name);
++        auto pid = Profile::browser_process_of_named_profile(roots, name);
++        profile.set("closable"sv, pid.has_value() && can_close_browser_process(*pid));
++        profiles.must_append(move(profile));
++    }
++
++    JsonObject result;
++    result.set("profiles"sv, move(profiles));
++    async_send_message("loadProfiles"sv, move(result));
++}
++
++static Optional<ByteString> profile_name_from(JsonValue const& data, StringView key)
++{
++    if (!data.is_object())
++        return {};
++    auto name = data.as_object().get_string(key);
++    if (!name.has_value())
++        return {};
++    return name->to_byte_string();
++}
++
++void SettingsUI::open_profile(JsonValue const& data)
++{
++    auto name = profile_name_from(data, "name"sv);
++    if (!name.has_value())
++        return;
++
++    auto result = [&]() -> ErrorOr<void> {
++        auto roots = TRY(Profile::platform_roots());
++        if (!TRY(Profile::named_profiles(roots)).contains_slow(*name))
++            return Error::from_string_literal("The profile does not exist");
++        Application::the().open_profile(*name);
++        return {};
++    }();
++    report_profile_result("open"sv, move(result));
++}
++
++void SettingsUI::close_profile(JsonValue const& data)
++{
++    auto name = profile_name_from(data, "name"sv);
++    if (!name.has_value())
++        return;
++    // A Ladybird that closes the profile it runs with opens another one first, so that a window stays open.
++    auto profile_to_open = profile_name_from(data, "openInstead"sv);
++    // A profile that is deleted while it is open is marked, and removed once it was closed.
++    auto removes_after_close = data.as_object().get_bool("removeAfterClose"sv).value_or(false);
++
++    auto result = [&]() -> ErrorOr<void> {
++        auto roots = TRY(Profile::platform_roots());
++        auto names = TRY(Profile::named_profiles(roots));
++        if (!names.contains_slow(*name))
++            return Error::from_string_literal("The profile does not exist");
++        if (profile_to_open.has_value() && (*profile_to_open == *name || !names.contains_slow(*profile_to_open)))
++            return Error::from_string_literal("The profile to switch to does not exist");
++
++        auto pid = Profile::browser_process_of_named_profile(roots, *name);
++        if (!pid.has_value())
++            return Error::from_string_literal("The profile is not open");
++        if (!can_close_browser_process(*pid))
++            return Error::from_string_literal("The profile is open in another version of Ladybird. Close it from its own windows");
++
++        if (removes_after_close)
++            TRY(Profile::mark_named_profile_for_removal(roots, *name));
++
++        // NB: The UI opens the other profile before it hears that it is to close, as messages to it arrive in order.
++        if (profile_to_open.has_value())
++            Application::the().open_profile(*profile_to_open);
++#if !defined(AK_OS_WINDOWS)
++        if (auto result = Core::System::kill(*pid, SIGUSR1); result.is_error()) {
++            if (removes_after_close)
++                (void)Profile::unmark_named_profile_for_removal(roots, *name);
++            return result.release_error();
++        }
++#endif
++        return {};
++    }();
++    report_profile_result("close"sv, move(result));
++}
++
++void SettingsUI::create_profile(JsonValue const& data)
++{
++    auto name = profile_name_from(data, "name"sv);
++    if (!name.has_value())
++        return;
++
++    auto result = [&]() -> ErrorOr<void> {
++        auto roots = TRY(Profile::platform_roots());
++        if (TRY(Profile::named_profiles(roots)).contains_slow(*name))
++            return Error::from_string_literal("A profile with that name already exists");
++        // NB: Creating the profile would take the mark away from one that was deleted while it was open, and keep it.
++        if (Profile::is_named_profile_marked_for_removal(roots, *name) && Profile::remove_named_profile(roots, *name).is_error())
++            return Error::from_string_literal("A profile with that name is still being deleted. Try again in a moment");
++        (void)TRY(Profile::create({ .name = *name }, roots));
++        return {};
++    }();
++    report_profile_result("create"sv, move(result));
++}
++
++void SettingsUI::rename_profile(JsonValue const& data)
++{
++    auto name = profile_name_from(data, "name"sv);
++    auto new_name = profile_name_from(data, "newName"sv);
++    if (!name.has_value() || !new_name.has_value())
++        return;
++
++    auto result = [&]() -> ErrorOr<void> {
++        auto roots = TRY(Profile::platform_roots());
++        return Profile::rename_named_profile(roots, *name, *new_name);
++    }();
++    report_profile_result("rename"sv, move(result));
++}
++
++void SettingsUI::remove_profile(JsonValue const& data)
++{
++    auto name = profile_name_from(data, "name"sv);
++    if (!name.has_value())
++        return;
++
++    // NB: The profile Ladybird is running with is in use, and is refused below. Checking it here as well keeps a
++    //     profile from being removed under this Ladybird if its PID file could not be read.
++    auto result = [&]() -> ErrorOr<void> {
++        auto roots = TRY(Profile::platform_roots());
++        auto identity = Profile::identity_of_named_profile(roots, *name);
++        if (!identity.is_error() && identity.value() == Application::profile().paths().identity)
++            return Error::from_string_literal("The profile is in use. Close the Ladybird that is using it first");
++        return Profile::remove_named_profile(roots, *name);
++    }();
++    report_profile_result("remove"sv, move(result));
++}
++
++void SettingsUI::set_primary_profile(JsonValue const& data)
++{
++    auto name = profile_name_from(data, "name"sv);
++    if (!name.has_value())
++        return;
++
++    auto result = [&]() -> ErrorOr<void> {
++        auto roots = TRY(Profile::platform_roots());
++        return Profile::set_primary_profile_name(roots, *name);
++    }();
++    report_profile_result("primary"sv, move(result));
++}
++
++void SettingsUI::report_profile_result(StringView operation, ErrorOr<void> result)
++{
++    JsonObject report;
++    report.set("operation"sv, String::from_utf8_without_validation(operation.bytes()));
++    if (result.is_error())
++        report.set("error"sv, MUST(String::formatted("{}", result.error())));
++    async_send_message("profileResult"sv, move(report));
++
++    if (operation != "load"sv)
++        load_profiles();
++}
++
+ }
+diff --git a/Libraries/LibWebView/WebUI/SettingsUI.h b/Libraries/LibWebView/WebUI/SettingsUI.h
+index e1b01836763fce6a2c1bc2a7db97ac3472513952..6a50682b1b1b57e78ad6d779cb5b61248ef3a5af 100644
+--- a/Libraries/LibWebView/WebUI/SettingsUI.h
++++ b/Libraries/LibWebView/WebUI/SettingsUI.h
+@@ -117,6 +117,15 @@ private:
+ 
+     void set_dns_settings(JsonValue const&);
+ 
++    void load_profiles();
++    void open_profile(JsonValue const&);
++    void close_profile(JsonValue const&);
++    void create_profile(JsonValue const&);
++    void rename_profile(JsonValue const&);
++    void remove_profile(JsonValue const&);
++    void set_primary_profile(JsonValue const&);
++    void report_profile_result(StringView operation, ErrorOr<void>);
++
+     Optional<JsonObject> m_current_settings;
+     bool m_settings_change_scheduled { false };
+ };
+diff --git a/README.md b/README.md
+index 4d45336769487dfe98a38bb3f24df9443074b9ec..1294559c5c4a5f3cef85c78c4250291cb9c328d6 100644
+--- a/README.md
++++ b/README.md
+@@ -30,6 +30,10 @@ At the moment, many core library support components are inherited from SerenityO
+ - LibCore: Event loop, OS abstraction layer
+ - LibIPC: Inter-process communication
+ 
++Each [profile](Documentation/Profiles.md) keeps its own settings, bookmarks, history, cookies and cache. Profiles are
++created, opened, closed, renamed and deleted from the **Profiles** menu and the **Profile management** section of
++`about:settings`, and several of them can be open at once, each in its own windows.
++
+ ## How do I build and run this?
+ 
+ See [build instructions](Documentation/BuildInstructionsLadybird.md) for information on how to build Ladybird.
+diff --git a/Services/Hub/Application.cpp b/Services/Hub/Application.cpp
+index f862c0790f1f90edcab9d42778f87d614f3f3d15..5f6a2bb3337b53643dcd9d699f0b7b501e640ef4 100644
+--- a/Services/Hub/Application.cpp
++++ b/Services/Hub/Application.cpp
+@@ -193,6 +193,13 @@ void Application::open_url_in_new_window(URL::URL const& url, WebView::IsPrivate
+         ui->async_app_open_url_in_new_window(url, is_private);
+ }
+ 
++// NB: The UI shows the windows, and starts the browser of another profile, as it was started itself.
++void Application::open_profile(ByteString const& name)
++{
++    if (auto* ui = ConnectionFromUI::the())
++        ui->async_app_open_profile(name);
++}
++
+ void Application::open_navigation_in_new_tab(Web::HTML::PreparedNavigationDescriptor navigation, Web::HTML::ActivateTab activate_tab, WebView::ViewImplementation const* source_view) const
+ {
+     if (auto* ui = ConnectionFromUI::the()) {
+@@ -342,6 +349,16 @@ void Application::did_clear_history_since(UnixDateTime since) const
+         ui->async_app_did_clear_history_since(since);
+ }
+ 
++void Application::close_keeping_session()
++{
++    // NB: The UI keeps the session, so it is the UI that quits. We end along with it.
++    if (auto* ui = ConnectionFromUI::the()) {
++        ui->async_app_close_keeping_session();
++        return;
++    }
++    WebView::Application::close_keeping_session();
++}
++
+ void Application::quit_for_signal()
+ {
+     // NB: The UI keeps the session, so it is the UI that quits. We end along with it.
+diff --git a/Services/Hub/Application.h b/Services/Hub/Application.h
+index 6b2637cc6898b0a0c9031b7d29c7092ff1b212f9..ca3bba42e7e3b64f3bf604155cbca00b173cc0ed 100644
+--- a/Services/Hub/Application.h
++++ b/Services/Hub/Application.h
+@@ -87,6 +87,7 @@ private:
+     virtual void activate_or_open_tab_with_url(URL::URL const&) const override;
+     virtual void open_urls_in_new_tabs(ReadonlySpan<URL::URL>) const override;
+     virtual void open_url_in_new_window(URL::URL const&, WebView::IsPrivate) override;
++    virtual void open_profile(ByteString const&) override;
+     virtual void open_navigation_in_new_tab(Web::HTML::PreparedNavigationDescriptor, Web::HTML::ActivateTab, WebView::ViewImplementation const* source_view = nullptr) const override;
+     virtual void open_navigation_in_new_window(Web::HTML::PreparedNavigationDescriptor, WebView::IsPrivate) override;
+     virtual NonnullRefPtr<Core::Promise<ByteString>> ask_user_for_download_path(ByteString const& file) const override;
+@@ -103,6 +104,7 @@ private:
+     virtual void update_tabs_display() const override;
+     virtual void did_clear_history_since(UnixDateTime) const override;
+     virtual void quit_for_signal() override;
++    virtual void close_keeping_session() override;
+     virtual NonnullOwnPtr<WebView::DefaultBrowser> create_default_browser() override;
+     virtual NonnullOwnPtr<WebView::MicrophoneAuthorizer> create_microphone_authorizer() override;
+     virtual NonnullOwnPtr<WebView::NotificationBackend> create_notification_backend() override;
+diff --git a/Services/Hub/HubClient.ipc b/Services/Hub/HubClient.ipc
+index 71f8f5fdcec211ec9ca8fa9aed27f560ed8aa005..27aee3d4b26450b085071c22a2cd2ef5f7324caf 100644
+--- a/Services/Hub/HubClient.ipc
++++ b/Services/Hub/HubClient.ipc
+@@ -311,10 +311,12 @@ endpoint HubClient
+     app_update_tabs_display() =|
+     app_did_clear_history_since(UnixDateTime since) =|
+     app_quit_for_signal() =|
++    app_close_keeping_session() =|
+     app_did_enable_devtools(u16 port) =|
+     app_did_disable_devtools() =|
+     app_gpu_painting_changed(bool gpu_painting_enabled) =|
+     app_open_urls_in_new_tabs(Vector<URL::URL> urls) =|
++    app_open_profile(ByteString name) =|
+     app_activate_or_open_tab_with_url(URL::URL url) =|
+     app_open_view_in_new_tab(u64 view_id, Optional<u64> source_view_id, WebView::IsPrivate is_private, Web::HTML::ActivateTab activate_tab) =|
+     app_display_error_dialog(String message) =|
+diff --git a/Tests/LibWebView/TestProfile.cpp b/Tests/LibWebView/TestProfile.cpp
+index 574c4bb85d840c301757eb30ee0ed95126b4580c..e178e116152b72918f9870e15d474d9e37a8092d 100644
+--- a/Tests/LibWebView/TestProfile.cpp
++++ b/Tests/LibWebView/TestProfile.cpp
+@@ -7,6 +7,8 @@
+ #include <AK/LexicalPath.h>
+ #include <AK/Time.h>
+ #include <LibCore/Directory.h>
++#include <LibCore/File.h>
++#include <LibCore/Process.h>
+ #include <LibCore/StandardPaths.h>
+ #include <LibCore/System.h>
+ #include <LibDatabase/Database.h>
+@@ -28,6 +30,8 @@
+ #include <LibWebView/Settings.h>
+ #include <LibWebView/StorageJar.h>
+ 
++#include <sys/file.h>
++
+ static ByteString test_root()
+ {
+     return LexicalPath::join(Core::StandardPaths::tempfile_directory(), ByteString::formatted("test-profile-{}", Core::System::getpid())).string();
+@@ -104,6 +108,193 @@ TEST_CASE(named_and_default_layouts)
+     remove_test_root();
+ }
+ 
++TEST_CASE(named_profile_listing)
++{
++    remove_test_root();
++    auto profile_roots = roots();
++
++    // Nothing is listed before any profile has been created.
++    EXPECT(MUST(WebView::Profile::named_profiles(profile_roots)).is_empty());
++
++    auto work = MUST(WebView::Profile::create({ .name = "work" }, profile_roots));
++    (void)MUST(WebView::Profile::create({ .name = "personal" }, profile_roots));
++    (void)MUST(WebView::Profile::create({ .name = "banking-2" }, profile_roots));
++
++    // A directory whose name could not be a profile's, and a file, are not profiles.
++    auto profiles_directory = LexicalPath::join(profile_roots.data, "Ladybird/Profiles"sv).string();
++    MUST(Core::Directory::create(LexicalPath::join(profiles_directory, "Not.A.Profile"sv), Core::Directory::CreateDirectories::Yes));
++    auto stray_file = MUST(Core::File::open(LexicalPath::join(profiles_directory, "stray"sv).string(), Core::File::OpenMode::Write));
++    stray_file->close();
++
++    auto names = MUST(WebView::Profile::named_profiles(profile_roots));
++    EXPECT_EQ(names, (Vector<ByteString> { "banking-2", "personal", "work" }));
++
++    EXPECT_EQ(MUST(WebView::Profile::identity_of_named_profile(profile_roots, "work"sv)), work.paths().identity);
++    EXPECT(WebView::Profile::identity_of_named_profile(profile_roots, "missing"sv).is_error());
++    EXPECT(WebView::Profile::identity_of_named_profile(profile_roots, "../work"sv).is_error());
++    remove_test_root();
++}
++
++static void write_pid_file(WebView::ProfileRoots const& roots, StringView name, pid_t pid)
++{
++    auto pid_path = LexicalPath::join(roots.runtime, "Ladybird/Profiles"sv, name, "Ladybird.pid"sv).string();
++    auto file = MUST(Core::File::open(pid_path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate));
++    auto contents = ByteString::number(pid);
++    MUST(file->write_until_depleted(contents.bytes()));
++}
++
++TEST_CASE(named_profile_rename)
++{
++    remove_test_root();
++    auto profile_roots = roots();
++    (void)MUST(WebView::Profile::create({ .name = "work" }, profile_roots));
++    (void)MUST(WebView::Profile::create({ .name = "personal" }, profile_roots));
++
++    // What the profile holds moves with it.
++    auto settings_path = LexicalPath::join(profile_roots.config, "Ladybird/Profiles/work/Settings.json"sv).string();
++    MUST(MUST(Core::File::open(settings_path, Core::File::OpenMode::Write))->write_until_depleted("{}"sv.bytes()));
++
++    MUST(WebView::Profile::rename_named_profile(profile_roots, "work"sv, "office"sv));
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "office", "personal" }));
++    EXPECT(FileSystem::exists(LexicalPath::join(profile_roots.config, "Ladybird/Profiles/office/Settings.json"sv).string()));
++    for (auto const& root : { profile_roots.config, profile_roots.data, profile_roots.cache, profile_roots.runtime })
++        EXPECT(!FileSystem::exists(LexicalPath::join(root, "Ladybird/Profiles/work"sv).string()));
++
++    // Another profile's name, a name that could not be a profile's, and a profile that does not exist are refused.
++    EXPECT(WebView::Profile::rename_named_profile(profile_roots, "office"sv, "personal"sv).is_error());
++    EXPECT(WebView::Profile::rename_named_profile(profile_roots, "office"sv, "Has Spaces"sv).is_error());
++    EXPECT(WebView::Profile::rename_named_profile(profile_roots, "missing"sv, "found"sv).is_error());
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "office", "personal" }));
++    remove_test_root();
++}
++
++TEST_CASE(named_profile_removal)
++{
++    remove_test_root();
++    auto profile_roots = roots();
++    (void)MUST(WebView::Profile::create({ .name = "work" }, profile_roots));
++    (void)MUST(WebView::Profile::create({ .name = "personal" }, profile_roots));
++
++    MUST(WebView::Profile::remove_named_profile(profile_roots, "work"sv));
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "personal" }));
++    for (auto const& root : { profile_roots.config, profile_roots.data, profile_roots.cache, profile_roots.runtime })
++        EXPECT(!FileSystem::exists(LexicalPath::join(root, "Ladybird/Profiles/work"sv).string()));
++
++    EXPECT(WebView::Profile::remove_named_profile(profile_roots, "work"sv).is_error());
++    remove_test_root();
++}
++
++TEST_CASE(profiles_in_use_are_not_changed)
++{
++    remove_test_root();
++    auto profile_roots = roots();
++    (void)MUST(WebView::Profile::create({ .name = "work" }, profile_roots));
++    EXPECT(!MUST(WebView::Profile::is_named_profile_in_use(profile_roots, "work"sv)));
++
++    // A running Ladybird has its PID in the profile. This process stands in for it.
++    write_pid_file(profile_roots, "work"sv, Core::System::getpid());
++    EXPECT(MUST(WebView::Profile::is_named_profile_in_use(profile_roots, "work"sv)));
++    EXPECT_EQ(WebView::Profile::browser_process_of_named_profile(profile_roots, "work"sv), Optional<i32> { Core::System::getpid() });
++    EXPECT(WebView::Profile::rename_named_profile(profile_roots, "work"sv, "office"sv).is_error());
++    EXPECT(WebView::Profile::remove_named_profile(profile_roots, "work"sv).is_error());
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "work" }));
++
++    // A Ladybird that crashed leaves its PID file behind, which doesn't keep the profile in use.
++    auto child = MUST(Core::Process::spawn("/usr/bin/true"sv, ReadonlySpan<ByteString> {}));
++    auto child_pid = child.pid();
++    (void)MUST(child.wait_for_termination());
++    write_pid_file(profile_roots, "work"sv, child_pid);
++    EXPECT(!MUST(WebView::Profile::is_named_profile_in_use(profile_roots, "work"sv)));
++    EXPECT(!WebView::Profile::browser_process_of_named_profile(profile_roots, "work"sv).has_value());
++
++    // A Ladybird that is starting with the profile holds its startup lock.
++    auto lock_path = LexicalPath::join(profile_roots.runtime, "Ladybird/Profiles/work/startup.lock"sv).string();
++    auto lock_file = MUST(Core::File::open(lock_path, Core::File::OpenMode::ReadWrite));
++    EXPECT_EQ(flock(lock_file->fd(), LOCK_EX | LOCK_NB), 0);
++    EXPECT(MUST(WebView::Profile::is_named_profile_in_use(profile_roots, "work"sv)));
++    EXPECT(WebView::Profile::remove_named_profile(profile_roots, "work"sv).is_error());
++    lock_file->close();
++
++    MUST(WebView::Profile::remove_named_profile(profile_roots, "work"sv));
++    EXPECT(MUST(WebView::Profile::named_profiles(profile_roots)).is_empty());
++    remove_test_root();
++}
++
++TEST_CASE(profiles_deleted_while_open_are_removed_once_closed)
++{
++    remove_test_root();
++    auto profile_roots = roots();
++    (void)MUST(WebView::Profile::create({ .name = "work" }, profile_roots));
++    (void)MUST(WebView::Profile::create({ .name = "personal" }, profile_roots));
++
++    // The profile is open, and is deleted from its own window.
++    write_pid_file(profile_roots, "work"sv, Core::System::getpid());
++    MUST(WebView::Profile::mark_named_profile_for_removal(profile_roots, "work"sv));
++    EXPECT(WebView::Profile::is_named_profile_marked_for_removal(profile_roots, "work"sv));
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "personal" }));
++
++    // It stays while it is open.
++    EXPECT_EQ(WebView::Profile::remove_named_profiles_marked_for_removal(profile_roots), 0u);
++    EXPECT(FileSystem::exists(LexicalPath::join(profile_roots.data, "Ladybird/Profiles/work"sv).string()));
++
++    // Once it was closed, it goes, and the profiles that weren't deleted stay.
++    MUST(FileSystem::remove(LexicalPath::join(profile_roots.runtime, "Ladybird/Profiles/work/Ladybird.pid"sv).string(), FileSystem::RecursionMode::Disallowed));
++    EXPECT_EQ(WebView::Profile::remove_named_profiles_marked_for_removal(profile_roots), 1u);
++    for (auto const& root : { profile_roots.config, profile_roots.data, profile_roots.cache, profile_roots.runtime })
++        EXPECT(!FileSystem::exists(LexicalPath::join(root, "Ladybird/Profiles/work"sv).string()));
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "personal" }));
++
++    // Opening a marked profile by name keeps it.
++    MUST(WebView::Profile::mark_named_profile_for_removal(profile_roots, "personal"sv));
++    (void)MUST(WebView::Profile::create({ .name = "personal" }, profile_roots));
++    EXPECT(!WebView::Profile::is_named_profile_marked_for_removal(profile_roots, "personal"sv));
++    EXPECT_EQ(WebView::Profile::remove_named_profiles_marked_for_removal(profile_roots), 0u);
++    EXPECT_EQ(MUST(WebView::Profile::named_profiles(profile_roots)), (Vector<ByteString> { "personal" }));
++    remove_test_root();
++}
++
++TEST_CASE(primary_profile)
++{
++    remove_test_root();
++    auto profile_roots = roots();
++
++    // The default profile is primary until another is made primary.
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), WebView::DEFAULT_PROFILE_NAME);
++
++    // Only a profile that exists can be made primary.
++    EXPECT(WebView::Profile::set_primary_profile_name(profile_roots, "work"sv).is_error());
++    EXPECT(WebView::Profile::set_primary_profile_name(profile_roots, "../work"sv).is_error());
++
++    (void)MUST(WebView::Profile::create({ .name = "work" }, profile_roots));
++    (void)MUST(WebView::Profile::create({ .name = "personal" }, profile_roots));
++
++    MUST(WebView::Profile::set_primary_profile_name(profile_roots, "work"sv));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), "work"sv);
++
++    // A primary profile that is renamed stays primary.
++    MUST(WebView::Profile::rename_named_profile(profile_roots, "work"sv, "office"sv));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), "office"sv);
++
++    // A profile to be deleted once it is closed is no longer primary, and can't be made primary.
++    MUST(WebView::Profile::mark_named_profile_for_removal(profile_roots, "office"sv));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), WebView::DEFAULT_PROFILE_NAME);
++    EXPECT(WebView::Profile::set_primary_profile_name(profile_roots, "office"sv).is_error());
++    MUST(WebView::Profile::unmark_named_profile_for_removal(profile_roots, "office"sv));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), "office"sv);
++
++    // Once the primary profile is deleted, the default profile is primary, even if a profile of that name is created again.
++    MUST(WebView::Profile::remove_named_profile(profile_roots, "office"sv));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), WebView::DEFAULT_PROFILE_NAME);
++    (void)MUST(WebView::Profile::create({ .name = "office" }, profile_roots));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), WebView::DEFAULT_PROFILE_NAME);
++
++    // Deleting a profile that isn't primary leaves the primary profile be.
++    MUST(WebView::Profile::set_primary_profile_name(profile_roots, "personal"sv));
++    MUST(WebView::Profile::remove_named_profile(profile_roots, "office"sv));
++    EXPECT_EQ(WebView::Profile::primary_profile_name(profile_roots), "personal"sv);
++    remove_test_root();
++}
++
+ TEST_CASE(custom_layout)
+ {
+     remove_test_root();
+diff --git a/UI/Qt/Application.cpp b/UI/Qt/Application.cpp
+index 52cb0276c797183b457dc9bfa8c6705a3f82d6fd..c269f6b83c49efdd1979da38940cb652bb83ee26 100644
+--- a/UI/Qt/Application.cpp
++++ b/UI/Qt/Application.cpp
+@@ -4,6 +4,7 @@
+  * SPDX-License-Identifier: BSD-2-Clause
+  */
+ 
++#include <AK/AnyOf.h>
+ #include <AK/GenericShorthands.h>
+ #include <AK/Hex.h>
+ #include <LibCore/ArgsParser.h>
+@@ -34,6 +35,7 @@
+ #include <LibWebView/NotificationBackend.h>
+ #include <LibWebView/PageTranslation.h>
+ #include <LibWebView/PictureInPictureManager.h>
++#include <LibWebView/Profile.h>
+ #include <LibWebView/ReportSubmission.h>
+ #include <UI/Qt/SystemAppearance.h>
+ #if defined(AK_OS_MACOS)
+@@ -68,6 +70,7 @@
+ #include <UI/Qt/PictureInPictureWindow.h>
+ #include <UI/Qt/PlainText.h>
+ #include <UI/Qt/ProcessManagerWindow.h>
++#include <UI/Qt/ProfileDialog.h>
+ #include <UI/Qt/RemoteDownloads.h>
+ #include <UI/Qt/SessionStore.h>
+ #include <UI/Qt/StringUtils.h>
+@@ -106,6 +109,7 @@
+ #endif
+ 
+ #include <QAction>
++#include <QActionGroup>
+ #include <QClipboard>
+ #include <QDesktopServices>
+ #include <QDir>
+@@ -122,6 +126,7 @@
+ #include <QMimeData>
+ #include <QMimeDatabase>
+ #include <QPointer>
++#include <QProcess>
+ #include <QSaveFile>
+ #include <QScreen>
+ #include <QShortcut>
+@@ -554,6 +559,13 @@ public:
+             update_history_menu(*m_history_menu, tab ? &tab->view() : nullptr);
+         });
+ 
++        // NB: Profiles can be created by another Ladybird at any time, so the menu lists them as it opens.
++        m_profiles_menu = new QMenu("&Profiles", m_application_widget);
++        Application::the().populate_profiles_menu(*m_profiles_menu);
++        QObject::connect(m_profiles_menu, &QMenu::aboutToShow, this, [this]() {
++            Application::the().populate_profiles_menu(*m_profiles_menu);
++        });
++
+         m_inspect_menu = create_application_menu(*m_application_widget, application.inspect_menu());
+         m_debug_menu = create_application_menu(*m_application_widget, application.debug_menu());
+ 
+@@ -652,6 +664,7 @@ private:
+ 
+     QMenu* m_bookmarks_menu { nullptr };
+     QMenu* m_history_menu { nullptr };
++    QMenu* m_profiles_menu { nullptr };
+     QMenu* m_inspect_menu { nullptr };
+     QMenu* m_debug_menu { nullptr };
+     QMenu* m_help_menu { nullptr };
+@@ -984,6 +997,8 @@ ErrorOr<void> Application::connect_to_hub(Main::Arguments const& arguments)
+         m_devtools_port = state.devtools_port;
+     m_gpu_painting_enabled = state.gpu_painting_enabled;
+     m_profile_is_temporary = state.profile_is_temporary;
++    m_profile_identity = state.profile_identity;
++    m_profile_identifier = state.profile_identifier;
+ #    if defined(AK_OS_MACOS)
+     set_profile_application_icon(state.profile_identifier, state.profile_identity, state.profile_is_temporary);
+ #    endif
+@@ -1133,7 +1148,8 @@ Application::~Application()
+         if (m_session_store) {
+             m_session_store->flush_dirty_state();
+             auto after_exit = SessionStore::AfterExit::KeepPinnedTabs;
+-            if (m_restart != Restart::None)
++            // NB: A profile that was closed to be opened later comes back the way it does after a restart.
++            if (m_restart != Restart::None || m_keeps_session_for_next_launch)
+                 after_exit = SessionStore::AfterExit::Restart;
+             else if (Application::settings().restore_previous_session())
+                 after_exit = SessionStore::AfterExit::KeepEverything;
+@@ -1292,6 +1308,8 @@ void Application::create_platform_actions()
+ 
+     m_settings = make<WebView::Settings>(WebView::Settings::create_from_json(WebView::Application::settings().serialize_json()));
+     m_profile_is_temporary = WebView::Application::profile().is_temporary();
++    m_profile_identity = WebView::Application::profile().paths().identity;
++    m_profile_identifier = WebView::Application::profile().identifier();
+     create_session_store(WebView::Application::profile().paths().data, hub.persists_sessions());
+     create_history_store(WebView::Application::profile().paths().data, WebView::Application::browser_options().disable_sql_database == WebView::DisableSQLDatabase::No);
+     m_bookmark_store = make<BookmarkStore>(BookmarkStore::create(LexicalPath::join(WebView::Application::profile().paths().config, "Bookmarks.json"sv).string(), *m_favicon_store));
+@@ -1694,6 +1712,12 @@ void Application::did_clear_history_since(UnixDateTime since)
+     on_recently_closed_entries_changed();
+ }
+ 
++void Application::close_keeping_session()
++{
++    m_keeps_session_for_next_launch = true;
++    quit_for_signal();
++}
++
+ void Application::quit_for_signal()
+ {
+     if (m_quit_is_finishing)
+@@ -2691,6 +2715,17 @@ Optional<Application::RestartCommand> Application::take_restart_command()
+         return {};
+     auto command = move(m_restart_command);
+     command.relaunched_by_updater = m_restart == Restart::ByUpdater;
++
++    // NB: A Ladybird started without a profile selected started with the primary profile, which may have changed since.
++    //     It restarts with the profile it is running with.
++    auto selects_profile = any_of(command.arguments, [](auto const& argument) {
++        // NB: The profiler's options, such as --profile-tool, also begin with "--profile".
++        return argument == "--profile"sv || argument.starts_with("--profile="sv)
++            || argument == "--profile-path"sv || argument.starts_with("--profile-path="sv)
++            || argument == "--temporary-profile"sv;
++    });
++    if (!selects_profile && !m_profile_is_temporary && WebView::Profile::is_valid_name(m_profile_identifier))
++        command.arguments.append(ByteString::formatted("--profile={}", m_profile_identifier));
+     return command;
+ }
+ 
+@@ -2726,6 +2761,138 @@ ErrorOr<void> Application::RestartCommand::run()
+     return {};
+ }
+ 
++static ErrorOr<Vector<ByteString>> existing_profile_names()
++{
++    auto roots = TRY(WebView::Profile::platform_roots());
++    return WebView::Profile::named_profiles(roots);
++}
++
++static bool is_running_with_named_profile(ByteString const& profile_identity, StringView name)
++{
++    auto roots = WebView::Profile::platform_roots();
++    if (roots.is_error())
++        return false;
++    auto identity = WebView::Profile::identity_of_named_profile(roots.value(), name);
++    return !identity.is_error() && identity.value() == profile_identity;
++}
++
++void Application::populate_profiles_menu(QMenu& menu)
++{
++    menu.clear();
++
++    auto names = existing_profile_names();
++    if (names.is_error())
++        warnln("Unable to list Ladybird profiles: {}", names.error());
++
++    auto roots = WebView::Profile::platform_roots();
++    auto primary_name = roots.is_error() ? ByteString { WebView::DEFAULT_PROFILE_NAME } : WebView::Profile::primary_profile_name(roots.value());
++
++    // Each profile is listed above the item that creates one, so every new profile pushes that item down.
++    if (!names.is_error() && !names.value().is_empty()) {
++        for (auto const& name : names.value()) {
++            // The primary profile is the one Ladybird starts with, which is chosen below or in the settings.
++            auto title = name == primary_name ? qformatted("{} (Primary)", name) : qstring_from_ak_string(name);
++            auto* action = menu.addAction(title);
++            action->setCheckable(true);
++            action->setChecked(is_running_with_named_profile(m_profile_identity, name));
++            QObject::connect(action, &QAction::triggered, &menu, [name] {
++                Application::the().open_profile(name);
++            });
++        }
++        menu.addSeparator();
++
++        auto* primary_menu = menu.addMenu("&Primary Profile");
++        auto* primary_group = new QActionGroup(primary_menu);
++        primary_group->setExclusive(true);
++        for (auto const& name : names.value()) {
++            auto* action = primary_menu->addAction(qstring_from_ak_string(name));
++            action->setCheckable(true);
++            action->setChecked(name == primary_name);
++            primary_group->addAction(action);
++            QObject::connect(action, &QAction::triggered, &menu, [name] {
++                Application::the().set_primary_profile(name);
++            });
++        }
++    }
++
++    auto* create_action = menu.addAction("&Create…");
++    QObject::connect(create_action, &QAction::triggered, &menu, [] {
++        Application::the().show_create_profile_dialog();
++    });
++}
++
++void Application::set_primary_profile(ByteString const& name)
++{
++    auto set_primary = [&]() -> ErrorOr<void> {
++        auto roots = TRY(WebView::Profile::platform_roots());
++        return WebView::Profile::set_primary_profile_name(roots, name);
++    };
++    if (auto result = set_primary(); result.is_error())
++        QMessageBox::warning(active_window_if_any(), "Unable to set the primary profile", qformatted("Ladybird could not make \"{}\" the primary profile: {}", name, result.error()));
++
++    // The menu is filled in as it opens, but on macOS it may already have been laid out for the menu bar.
++    if (auto* menu = profiles_menu())
++        populate_profiles_menu(*menu);
++}
++
++void Application::show_create_profile_dialog()
++{
++    auto names = existing_profile_names();
++    if (names.is_error()) {
++        warnln("Unable to list Ladybird profiles: {}", names.error());
++        names = Vector<ByteString> {};
++    }
++
++    auto* parent = active_window_if_any();
++    auto* dialog = new ProfileDialog(parent, names.release_value());
++
++    QObject::connect(dialog, &QDialog::finished, [parent = QPointer<QWidget> { parent }, dialog = QPointer { dialog }](auto result) {
++        if (result != QDialog::Accepted || !dialog)
++            return;
++
++        auto name = dialog->profile_name();
++        auto create_profile = [&]() -> ErrorOr<void> {
++            auto roots = TRY(WebView::Profile::platform_roots());
++            // NB: Creating the profile would take the mark away from one that was deleted while it was open, and keep it.
++            if (WebView::Profile::is_named_profile_marked_for_removal(roots, name) && WebView::Profile::remove_named_profile(roots, name).is_error())
++                return Error::from_string_literal("A profile with that name is still being deleted. Try again in a moment");
++            // NB: The profile's directories are all that make it exist. It is opened once it is chosen from the menu.
++            (void)TRY(WebView::Profile::create({ .name = name }, roots));
++            return {};
++        };
++        if (auto result = create_profile(); result.is_error()) {
++            QMessageBox::warning(parent, "Unable to create profile", qformatted("Ladybird could not create the profile \"{}\": {}", name, result.error()));
++            return;
++        }
++
++        // The menu is filled in as it opens, but on macOS it may already have been laid out for the menu bar.
++        if (auto* menu = Application::the().profiles_menu())
++            Application::the().populate_profiles_menu(*menu);
++    });
++
++    dialog->open();
++}
++
++void Application::open_profile(ByteString const& name)
++{
++    if (is_running_with_named_profile(m_profile_identity, name)) {
++        open_new_window(WebView::IsPrivate::No);
++        return;
++    }
++
++    // NB: Each profile runs in a Ladybird of its own. If one is running with the profile already, the new one hands it
++    //     a request to open a window, and ends.
++    if (m_restart_command.executable.is_empty()) {
++        warnln("Unable to open the profile \"{}\": the path of the Ladybird executable is unknown", name);
++        return;
++    }
++
++    auto executable = qstring_from_ak_string(m_restart_command.executable);
++    auto arguments = QStringList { qformatted("--profile={}", name) };
++    if (!QProcess::startDetached(executable, arguments))
++        warnln("Unable to open the profile \"{}\": Ladybird could not be started", name);
++}
++
+ void Application::open_file(String const& path) const
+ {
+     QDesktopServices::openUrl(QUrl::fromLocalFile(qstring_from_ak_string(path)));
+@@ -3213,6 +3380,7 @@ QMenuBar* Application::create_application_menu_bar(ForBrowserWindow for_browser_
+ 
+     menu_bar->addMenu(bookmarks_menu());
+     menu_bar->addMenu(history_menu());
++    menu_bar->addMenu(profiles_menu());
+     if (for_browser_window == ForBrowserWindow::Yes) {
+         menu_bar->addMenu(inspect_menu());
+         menu_bar->addMenu(debug_menu());
+@@ -3237,6 +3405,7 @@ QMenuBar* Application::create_application_menu_bar(ForBrowserWindow for_browser_
+ 
+ DEFINE_APP_MENU_GETTER(QMenu, bookmarks_menu);
+ DEFINE_APP_MENU_GETTER(QMenu, history_menu);
++DEFINE_APP_MENU_GETTER(QMenu, profiles_menu);
+ DEFINE_APP_MENU_GETTER(QMenu, inspect_menu);
+ DEFINE_APP_MENU_GETTER(QMenu, debug_menu);
+ DEFINE_APP_MENU_GETTER(QMenu, help_menu);
+diff --git a/UI/Qt/Application.h b/UI/Qt/Application.h
+index ec2c13691519134698556b0f54e37c67e84a94b7..df537668ed33c03a59c2289169129b04133265e1 100644
+--- a/UI/Qt/Application.h
++++ b/UI/Qt/Application.h
+@@ -138,6 +138,13 @@ public:
+ 
+     void open_new_tab();
+     void open_new_window(WebView::IsPrivate);
++    // Shows the profiles that exist, with the one Ladybird is running with checked, followed by an item to create one.
++    void populate_profiles_menu(QMenu&);
++    void show_create_profile_dialog();
++    // Makes the named profile the one that Ladybird starts with when it is not already running.
++    void set_primary_profile(ByteString const& name);
++    // Opens a window of the named profile, in this Ladybird if it is running with that profile, or else in another.
++    void open_profile(ByteString const& name);
+     enum class ReopenClosedWindow {
+         InNewWindow,
+         InTargetWindow,
+@@ -191,6 +198,7 @@ public:
+ 
+     QMenu* bookmarks_menu();
+     QMenu* history_menu();
++    QMenu* profiles_menu();
+     QMenu* inspect_menu();
+     QMenu* debug_menu();
+     QMenu* help_menu();
+@@ -335,6 +343,8 @@ private:
+     void create_session_store(ByteString const& data_directory, bool persists_sessions);
+     void create_history_store(ByteString const& data_directory, bool uses_sql_database);
+     void quit_for_signal();
++    // Quits so that the next launch brings back every window and tab, whatever the settings say, as after a restart.
++    void close_keeping_session();
+ 
+     static Application* s_the;
+ 
+@@ -416,6 +426,11 @@ private:
+     Restart m_restart { Restart::None };
+     bool m_installation_replaced { false };
+     bool m_profile_is_temporary { false };
++    bool m_keeps_session_for_next_launch { false };
++    // The identity of the profile Ladybird is running with, which tells it apart in the profiles menu.
++    ByteString m_profile_identity;
++    // The name of the profile Ladybird is running with, if it is a named profile.
++    ByteString m_profile_identifier;
+     RestartCommand m_restart_command;
+ 
+     struct OpenSSLMismatch {
+diff --git a/UI/Qt/BrowserWindow.cpp b/UI/Qt/BrowserWindow.cpp
+index a6035143824fa25c85443b4eef45081dfbf31ca5..9c57675cccf903c65696f380e30ecd8aabcad4c2 100644
+--- a/UI/Qt/BrowserWindow.cpp
++++ b/UI/Qt/BrowserWindow.cpp
+@@ -558,6 +558,7 @@ void BrowserWindow::initialize_ladybird_menu()
+     }
+     m_ladybird_menu->addSeparator();
+ 
++    m_ladybird_menu->addMenu(application.profiles_menu());
+     m_ladybird_menu->addMenu(application.history_menu());
+     m_ladybird_menu->addMenu(application.bookmarks_menu());
+     auto* downloads_action = m_ladybird_menu->addAction("Downloads");
+diff --git a/UI/Qt/CMakeLists.txt b/UI/Qt/CMakeLists.txt
+index f26f17c72715ff45272730879263738b102a5c30..fcc88e62196cae0b0669165a6c73d865f939b113 100644
+--- a/UI/Qt/CMakeLists.txt
++++ b/UI/Qt/CMakeLists.txt
+@@ -56,6 +56,7 @@ add_library(ladybird_impl STATIC
+     PlainText.cpp
+     Popover.cpp
+     ProcessManagerWindow.cpp
++    ProfileDialog.cpp
+     RemoteDownloads.cpp
+     RemoteView.cpp
+     ReportReview.cpp
+diff --git a/UI/Qt/ChromeStyle.cpp b/UI/Qt/ChromeStyle.cpp
+index 29072dd46a84c3f0dd885313b91ceaaa4b0d81e4..404a9096a236ef1a8a1394c686c21661bbe1d2f6 100644
+--- a/UI/Qt/ChromeStyle.cpp
++++ b/UI/Qt/ChromeStyle.cpp
+@@ -864,7 +864,8 @@ QFrame#LadybirdJavaScriptDialogPanel QScrollBar::sub-page:vertical {{
+         + panel_text_selection_style_sheet({ "QFrame#LadybirdJavaScriptDialogPanel QLineEdit" }, panel.text);
+ }
+ 
+-QString bookmark_dialog_style_sheet(QPalette const& palette)
++// The style of a small form dialog, such as the bookmark dialog, whose QDialog has the given object name.
++static QString form_dialog_style_sheet(QPalette const& palette, StringView object_name)
+ {
+     auto surface = style_sheet_color(chrome_surface(palette));
+     auto recessed = style_sheet_color(chrome_surface_recessed(palette));
+@@ -875,19 +876,19 @@ QString bookmark_dialog_style_sheet(QPalette const& palette)
+     auto text = style_sheet_color(chrome_text(palette));
+ 
+     return qformatted(R"(
+-QDialog#LadybirdBookmarkDialog {{
++QDialog#{7} {{
+     color: {6};
+     background: {0};
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QLabel {{
++QDialog#{7} QLabel {{
+     color: {6};
+     background: transparent;
+     border: 0;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QLineEdit,
+-QDialog#LadybirdBookmarkDialog QComboBox {{
++QDialog#{7} QLineEdit,
++QDialog#{7} QComboBox {{
+     color: {6};
+     background: {1};
+     border: 1px solid transparent;
+@@ -896,29 +897,29 @@ QDialog#LadybirdBookmarkDialog QComboBox {{
+     padding: 2px 9px;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QLineEdit:focus,
+-QDialog#LadybirdBookmarkDialog QComboBox:focus {{
++QDialog#{7} QLineEdit:focus,
++QDialog#{7} QComboBox:focus {{
+     border-color: {5};
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QComboBox {{
++QDialog#{7} QComboBox {{
+     padding-right: 24px;
+     /* Use the list popup so its rows can be styled on macOS. */
+     combobox-popup: 0;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QComboBox::drop-down {{
++QDialog#{7} QComboBox::drop-down {{
+     subcontrol-origin: padding;
+     subcontrol-position: top right;
+     width: 24px;
+     border: 0;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QComboBox::down-arrow {{
++QDialog#{7} QComboBox::down-arrow {{
+     image: none;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QComboBox QAbstractItemView {{
++QDialog#{7} QComboBox QAbstractItemView {{
+     color: {6};
+     background: {0};
+     border: 1px solid {4};
+@@ -927,18 +928,18 @@ QDialog#LadybirdBookmarkDialog QComboBox QAbstractItemView {{
+     outline: 0;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QComboBox QAbstractItemView::item {{
++QDialog#{7} QComboBox QAbstractItemView::item {{
+     min-height: 26px;
+     padding: 2px 9px;
+     border-radius: 6px;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QComboBox QAbstractItemView::item:selected {{
++QDialog#{7} QComboBox QAbstractItemView::item:selected {{
+     color: {6};
+     background: {2};
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QPushButton {{
++QDialog#{7} QPushButton {{
+     color: {6};
+     background: {1};
+     border: 1px solid {4};
+@@ -948,26 +949,36 @@ QDialog#LadybirdBookmarkDialog QPushButton {{
+     padding: 2px 12px;
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QPushButton:hover {{
++QDialog#{7} QPushButton:hover {{
+     background: {2};
+     border-color: {4};
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QPushButton:pressed {{
++QDialog#{7} QPushButton:pressed {{
+     background: {3};
+     border-color: {4};
+ }}
+ 
+-QDialog#LadybirdBookmarkDialog QPushButton:default,
+-QDialog#LadybirdBookmarkDialog QPushButton:focus {{
++QDialog#{7} QPushButton:default,
++QDialog#{7} QPushButton:focus {{
+     border-color: {5};
+ }}
+ )",
+-               surface, recessed, hover, pressed, control_border, accent, text)
+-        + panel_text_selection_style_sheet({ "QDialog#LadybirdBookmarkDialog QLineEdit", "QDialog#LadybirdBookmarkDialog QComboBox" },
++               surface, recessed, hover, pressed, control_border, accent, text, object_name)
++        + panel_text_selection_style_sheet({ qformatted("QDialog#{} QLineEdit", object_name), qformatted("QDialog#{} QComboBox", object_name) },
+             chrome_text(palette));
+ }
+ 
++QString bookmark_dialog_style_sheet(QPalette const& palette)
++{
++    return form_dialog_style_sheet(palette, "LadybirdBookmarkDialog"sv);
++}
++
++QString profile_dialog_style_sheet(QPalette const& palette)
++{
++    return form_dialog_style_sheet(palette, "LadybirdProfileDialog"sv);
++}
++
+ QString report_review_style_sheet(QPalette const& palette)
+ {
+     auto recessed = style_sheet_color(chrome_surface_recessed(palette));
+diff --git a/UI/Qt/ChromeStyle.h b/UI/Qt/ChromeStyle.h
+index fdc9687280065fbd8c90ac64418e97fee40f9d06..9a2139212324300cad8139cf8223056d869237bc 100644
+--- a/UI/Qt/ChromeStyle.h
++++ b/UI/Qt/ChromeStyle.h
+@@ -101,6 +101,7 @@ QString find_in_page_style_sheet(QPalette const&);
+ QColor find_in_page_unavailable_control_color();
+ QString javascript_dialog_style_sheet(QPalette const&);
+ QString bookmark_dialog_style_sheet(QPalette const&);
++QString profile_dialog_style_sheet(QPalette const&);
+ QString report_review_style_sheet(QPalette const&);
+ QColor report_review_placeholder_text(QPalette const&);
+ QString devtools_banner_style_sheet(QPalette const&);
+diff --git a/UI/Qt/HubConnection.cpp b/UI/Qt/HubConnection.cpp
+index 73aa083f8a742076cd3c9fd571e1c48ca8b49bce..78a15c44c32a5f6b4b2e252cb36915495828d723 100644
+--- a/UI/Qt/HubConnection.cpp
++++ b/UI/Qt/HubConnection.cpp
+@@ -9,6 +9,7 @@
+ #include <LibGamepad/SDLGamepadSource.h>
+ #include <LibWebView/CrashReportOutbox.h>
+ #include <LibWebView/MicrophoneAuthorizer.h>
++#include <LibWebView/Profile.h>
+ #include <UI/Qt/Application.h>
+ #include <UI/Qt/ApplicationActions.h>
+ #include <UI/Qt/Bookmarks.h>
+@@ -278,6 +279,19 @@ void HubConnection::app_open_url_in_new_window(URL::URL url, WebView::IsPrivate
+     Application::the().open_url_in_new_window(move(url), move(is_private));
+ }
+ 
++void HubConnection::app_close_keeping_session()
++{
++    Application::the().close_keeping_session();
++}
++
++void HubConnection::app_open_profile(ByteString name)
++{
++    // NB: The Hub only asks for a profile that it found to exist.
++    if (!WebView::Profile::is_valid_name(name))
++        return;
++    Application::the().open_profile(name);
++}
++
+ void HubConnection::app_open_navigation_in_new_tab(Web::HTML::PreparedNavigationDescriptor navigation, Web::HTML::ActivateTab activate_tab, Optional<u64> source_view_id, WebView::IsPrivate is_private)
+ {
+     Application::the().open_navigation_in_new_tab(move(navigation), activate_tab, source_view_id, is_private);
+diff --git a/UI/Qt/HubConnection.h b/UI/Qt/HubConnection.h
+index b4eeba82454f31408825f3573e98c08853d42dee..13acb3d6cd2250e85e9caefa1c4ea0a6cea15e8e 100644
+--- a/UI/Qt/HubConnection.h
++++ b/UI/Qt/HubConnection.h
+@@ -128,6 +128,8 @@ private:
+     virtual void download_removed(u64 id, WebView::IsPrivate is_private) override;
+     virtual void app_open_url_in_new_tab(URL::URL url, Web::HTML::ActivateTab activate_tab, Optional<u64> source_view_id, WebView::IsPrivate is_private) override;
+     virtual void app_open_url_in_new_window(URL::URL url, WebView::IsPrivate is_private) override;
++    virtual void app_open_profile(ByteString name) override;
++    virtual void app_close_keeping_session() override;
+     virtual void app_open_navigation_in_new_tab(Web::HTML::PreparedNavigationDescriptor navigation, Web::HTML::ActivateTab activate_tab, Optional<u64> source_view_id, WebView::IsPrivate is_private) override;
+     virtual void app_open_navigation_in_new_window(Web::HTML::PreparedNavigationDescriptor navigation, WebView::IsPrivate is_private) override;
+     virtual void app_set_clipboard_text(String text, WebView::Application::ClipboardType type) override;
+diff --git a/UI/Qt/ProfileDialog.cpp b/UI/Qt/ProfileDialog.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..c2b6c80e95c3c14ace94db7899983438f4022ed5
+--- /dev/null
++++ b/UI/Qt/ProfileDialog.cpp
+@@ -0,0 +1,106 @@
++/*
++ * Copyright (c) 2026-present, the Ladybird developers.
++ *
++ * SPDX-License-Identifier: BSD-2-Clause
++ */
++
++#include <LibWebView/Profile.h>
++#include <UI/Qt/ChromeStyle.h>
++#include <UI/Qt/NativeTextEditingLineEdit.h>
++#include <UI/Qt/ProfileDialog.h>
++#include <UI/Qt/StringUtils.h>
++
++#include <QDialogButtonBox>
++#include <QEvent>
++#include <QFormLayout>
++#include <QLabel>
++#include <QPushButton>
++#include <QRegularExpressionValidator>
++
++namespace Ladybird {
++
++// Profile names become directory names, so they are kept short.
++static constexpr int MAXIMUM_PROFILE_NAME_LENGTH = 64;
++
++ProfileDialog::ProfileDialog(QWidget* parent, Vector<ByteString> existing_profile_names)
++    : QDialog(parent)
++    , m_existing_profile_names(AK::move(existing_profile_names))
++{
++    setAttribute(Qt::WA_DeleteOnClose);
++    setObjectName("LadybirdProfileDialog");
++    setWindowTitle("Create profile");
++
++    auto* layout = new QFormLayout(this);
++    layout->setContentsMargins(20, 18, 20, 18);
++    layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
++    layout->setHorizontalSpacing(16);
++    layout->setVerticalSpacing(12);
++
++    m_name_edit = new NativeTextEditingLineEdit(this);
++    m_name_edit->setMinimumWidth(280);
++    m_name_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
++    m_name_edit->setMaxLength(MAXIMUM_PROFILE_NAME_LENGTH);
++    m_name_edit->setPlaceholderText("work");
++    // Upper case letters are taken as they are typed, and become lower case, which is all a profile name may contain.
++    m_name_edit->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z0-9_-]*"), m_name_edit));
++    connect(m_name_edit, &QLineEdit::textEdited, this, [this](QString const& text) {
++        auto lower_case_text = text.toLower();
++        if (lower_case_text != text) {
++            auto cursor_position = m_name_edit->cursorPosition();
++            m_name_edit->setText(lower_case_text);
++            m_name_edit->setCursorPosition(cursor_position);
++        }
++    });
++    connect(m_name_edit, &QLineEdit::textChanged, this, [this] { update_create_button(); });
++    layout->addRow("Name:", m_name_edit);
++
++    m_problem_label = new QLabel(this);
++    m_problem_label->setVisible(false);
++    layout->addRow(QString {}, m_problem_label);
++
++    auto* buttons = new QDialogButtonBox(QDialogButtonBox::Cancel, this);
++    m_create_button = buttons->addButton("Create", QDialogButtonBox::AcceptRole);
++    m_create_button->setDefault(true);
++    connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
++    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
++    layout->addRow(buttons);
++
++    update_create_button();
++    update_chrome_style();
++    resize(400, sizeHint().height());
++}
++
++ByteString ProfileDialog::profile_name() const
++{
++    return ak_byte_string_from_qstring(m_name_edit->text());
++}
++
++void ProfileDialog::update_create_button()
++{
++    auto name = profile_name();
++    auto is_taken = m_existing_profile_names.contains_slow(name);
++
++    if (is_taken)
++        m_problem_label->setText(qformatted("A profile named \"{}\" already exists.", name));
++    m_problem_label->setVisible(is_taken);
++    m_create_button->setEnabled(WebView::Profile::is_valid_name(name) && !is_taken);
++}
++
++bool ProfileDialog::event(QEvent* event)
++{
++    if (event->type() == QEvent::PaletteChange)
++        update_chrome_style();
++    return QDialog::event(event);
++}
++
++void ProfileDialog::update_chrome_style()
++{
++    if (m_is_updating_chrome_style)
++        return;
++
++    m_is_updating_chrome_style = true;
++    setStyleSheet(ChromeStyle::profile_dialog_style_sheet(palette()));
++    m_is_updating_chrome_style = false;
++}
++
++}
+diff --git a/UI/Qt/ProfileDialog.h b/UI/Qt/ProfileDialog.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..210908dcacea910f8f4a3169c53a5c25d2d224f3
+--- /dev/null
++++ b/UI/Qt/ProfileDialog.h
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (c) 2026-present, the Ladybird developers.
++ *
++ * SPDX-License-Identifier: BSD-2-Clause
++ */
++
++#pragma once
++
++#include <AK/ByteString.h>
++#include <AK/Vector.h>
++#include <AK/kmalloc.h>
++
++#include <QDialog>
++
++class QLabel;
++class QLineEdit;
++class QPushButton;
++
++namespace Ladybird {
++
++// Asks for the name of a new profile. A name is accepted only if it is valid and no profile has it yet.
++class ProfileDialog final : public QDialog {
++public:
++    AK_ALLOC_WITH_KMALLOC;
++
++    ProfileDialog(QWidget* parent, Vector<ByteString> existing_profile_names);
++
++    ByteString profile_name() const;
++
++protected:
++    virtual bool event(QEvent*) override;
++
++private:
++    void update_create_button();
++    void update_chrome_style();
++
++    Vector<ByteString> m_existing_profile_names;
++    QLineEdit* m_name_edit { nullptr };
++    QLabel* m_problem_label { nullptr };
++    QPushButton* m_create_button { nullptr };
++    bool m_is_updating_chrome_style { false };
++};
++
++}
+diff --git a/UI/cmake/ResourceFiles.cmake b/UI/cmake/ResourceFiles.cmake
+index c76122eb8eef34ab586d16186a9723156488c880..a0f7dc9d19aa9714739cdd2df08a7abbf34bb78a 100644
+--- a/UI/cmake/ResourceFiles.cmake
++++ b/UI/cmake/ResourceFiles.cmake
+@@ -56,6 +56,7 @@ set(ABOUT_SETTINGS_RESOURCES
+     network.js
+     permissions.js
+     privacy.js
++    profiles.js
+     search.js
+     services.js
+     startup.js
