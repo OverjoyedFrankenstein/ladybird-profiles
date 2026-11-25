@@ -10,25 +10,25 @@ are kept.** Every profile you already have shows up in the new menus, next to an
 
 ## Quick start
 
-Open Terminal and paste one of these. Each one downloads the latest version of this add-on to a temporary folder and
-runs it, so there's nothing to keep around.
-
-**Install** (or update to the latest version):
+Open Terminal, paste this line and press Return:
 
 ```sh
-d=$(mktemp -d) && git clone -q https://github.com/OverjoyedFrankenstein/ladybird-profiles "$d" && python3 "$d/install.py"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/OverjoyedFrankenstein/ladybird-profiles/main/install.sh)"
 ```
+
+That's the whole install. It downloads the latest version of this add-on to a temporary folder and runs it, so
+there's nothing to keep around. Run the same line again later to update.
 
 **Undo**, putting back the Ladybird you had before:
 
 ```sh
-d=$(mktemp -d) && git clone -q https://github.com/OverjoyedFrankenstein/ladybird-profiles "$d" && python3 "$d/install.py" --restore
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/OverjoyedFrankenstein/ladybird-profiles/main/install.sh)" - --restore
 ```
 
 **Try it first**, checking everything without building or installing:
 
 ```sh
-d=$(mktemp -d) && git clone -q https://github.com/OverjoyedFrankenstein/ladybird-profiles "$d" && python3 "$d/install.py" --dry-run
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/OverjoyedFrankenstein/ladybird-profiles/main/install.sh)" - --dry-run
 ```
 
 The installer checks for the build tools and offers to install any that are missing. If Ladybird is open, it asks
@@ -192,8 +192,8 @@ You'll find the **Profiles** menu in the menu bar and **Profile management** in 
 
 ### Or run it straight from GitHub
 
-The commands in [Quick start](#quick-start) clone this repository to a temporary folder and run `install.py` from
-there. The build, backups and install record live in the work directory (`~/Library/Caches/ladybird-profiles`), not
+The commands in [Quick start](#quick-start) run `install.sh`, which downloads this repository to a temporary folder and
+runs `install.py` from there. The build, backups and install record live in the work directory (`~/Library/Caches/ladybird-profiles`), not
 next to the script, so `--restore` works from any copy.
 
 If Ladybird is open, the installer says **Close Ladybird for the patch to take place** and counts down from 30. It
@@ -311,6 +311,7 @@ profiles are kept. Run `python3 install.py` again to add the features back.
 | Path | What it is |
 | --- | --- |
 | `README.md` | This file. |
+| `install.sh` | The one-line installer. It downloads this repository and runs `install.py`. |
 | `install.py` | The installer. |
 | `patches/profiles.patch` | All of the add-on's changes to Ladybird: 22 changed files and 4 new ones. |
 | `patches/base.json` | The ids of the original versions of the changed files. The installer uses them to find a matching Ladybird. |
