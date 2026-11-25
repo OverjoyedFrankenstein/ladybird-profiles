@@ -80,6 +80,8 @@ A **Profiles** menu in the menu bar, between **History** and **Inspect**, and in
 
 <img src="docs/images/profiles-menu-bar.png" alt="The Profiles menu in the macOS menu bar, listing the default (Primary) and developer profiles, with the Primary Profile submenu and Create…" width="603">
 
+<img src="docs/images/profiles-window-menu.png" alt="The same Profiles menu in a window's Ladybird menu" width="709">
+
 - Lists every profile in alphabetical order, with a check mark next to the profile the window belongs to.
 - Marks the primary profile **(Primary)**.
 - Choosing a profile opens a window of it. A profile that isn't open starts in its own Ladybird; one that is already
@@ -91,6 +93,8 @@ A **Profiles** menu in the menu bar, between **History** and **Inspect**, and in
 
 A **Profile management** section in `about:settings` lists every profile. It notes which one is primary, which one
 you're in, and which are open in other windows. Each profile has an **Open** button and a gear menu with:
+
+<img src="docs/images/settings-profile-management.png" alt="Profile management in about:settings, listing the default and developer profiles, with the gear menu open on developer showing Make primary, Close, Rename… and Delete…" width="1195">
 
 | Item | What it does |
 | --- | --- |
