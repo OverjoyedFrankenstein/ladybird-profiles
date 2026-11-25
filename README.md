@@ -8,6 +8,37 @@ The add-on is a patch to Ladybird's source code plus an installer script, `insta
 with the patch applied and installs that build in place of the Ladybird you already have. **Your existing profiles
 are kept.** Every profile you already have shows up in the new menus, next to any you create.
 
+## Quick start
+
+Open Terminal and paste one of these. Each one downloads the latest version of this add-on to a temporary folder and
+runs it, so there's nothing to keep around.
+
+**Install** (or update to the latest version):
+
+```sh
+d=$(mktemp -d) && git clone -q https://github.com/OverjoyedFrankenstein/ladybird-profiles "$d" && python3 "$d/install.py"
+```
+
+**Undo**, putting back the Ladybird you had before:
+
+```sh
+d=$(mktemp -d) && git clone -q https://github.com/OverjoyedFrankenstein/ladybird-profiles "$d" && python3 "$d/install.py" --restore
+```
+
+**Try it first**, checking everything without building or installing:
+
+```sh
+d=$(mktemp -d) && git clone -q https://github.com/OverjoyedFrankenstein/ladybird-profiles "$d" && python3 "$d/install.py" --dry-run
+```
+
+The installer checks for the build tools and offers to install any that are missing. If Ladybird is open, it asks
+you to close it. It asks once more before it replaces your Ladybird, and it opens the new Ladybird when it's done. The
+first build takes an hour or more. See [How to install](#how-to-install) for the details and
+[Installer options](#installer-options) for the other options, which go at the end of the command the same way.
+
+## Contents
+
+- [Quick start](#quick-start)
 - [What it does](#what-it-does)
 - [Features](#features)
 - [Requirements](#requirements)
@@ -161,16 +192,9 @@ You'll find the **Profiles** menu in the menu bar and **Profile management** in 
 
 ### Or run it straight from GitHub
 
-This one command downloads the latest version of this repository to a temporary folder and runs the installer from
-there, so you don't need to keep a copy. The repository is private, so it uses the GitHub CLI (`gh auth login` first):
-
-```sh
-d=$(mktemp -d) && gh repo clone OverjoyedFrankenstein/ladybird-profiles "$d" -- -q && python3 "$d/install.py"
-```
-
-Put any installer options at the end, for example `python3 "$d/install.py" --restore`. The build, backups and install
-record live in the work directory (`~/Library/Caches/ladybird-profiles`), not next to the script, so `--restore`
-works from any copy.
+The commands in [Quick start](#quick-start) clone this repository to a temporary folder and run `install.py` from
+there. The build, backups and install record live in the work directory (`~/Library/Caches/ladybird-profiles`), not
+next to the script, so `--restore` works from any copy.
 
 If Ladybird is open, the installer says **Close Ladybird for the patch to take place** and counts down from 30. It
 checks again when the countdown ends or when you press a key, and carries on once Ladybird is closed. Press Ctrl+C to
