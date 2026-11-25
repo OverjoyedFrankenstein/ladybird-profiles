@@ -78,6 +78,8 @@ installer therefore:
 
 A **Profiles** menu in the menu bar, between **History** and **Inspect**, and in the Ladybird menu of every window.
 
+<img src="docs/images/profiles-menu-bar.png" alt="The Profiles menu in the macOS menu bar, listing the default (Primary) and developer profiles, with the Primary Profile submenu and Create…" width="603">
+
 - Lists every profile in alphabetical order, with a check mark next to the profile the window belongs to.
 - Marks the primary profile **(Primary)**.
 - Choosing a profile opens a window of it. A profile that isn't open starts in its own Ladybird; one that is already
