@@ -212,7 +212,7 @@ with `--profile=<name>`.
 | --- | --- |
 | `--dry-run` | Find Ladybird and your profiles, download and patch the source, then stop. Nothing is built or installed. |
 | `--build-only` | Build, but don't install. |
-| `--yes`, `-y` | Don't ask before replacing your Ladybird. |
+| `--yes`, `-y` | Don't ask before installing missing build tools or replacing your Ladybird. |
 | `--restore` | Put back the Ladybird that the last install replaced. |
 | `--no-launch` | Don't open Ladybird when the install or restore is done. |
 | `--app PATH` | macOS: the `Ladybird.app` to upgrade. Default: `/Applications/Ladybird.app`, then `~/Applications/Ladybird.app`. |
