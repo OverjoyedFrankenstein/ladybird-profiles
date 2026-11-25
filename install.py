@@ -225,6 +225,200 @@ def wait_for_ladybird_to_quit() -> None:
     say("Ladybird is closed. Continuing.")
 
 
+def launch_ladybird(path: Path) -> None:
+    """Open the Ladybird that was just installed: an app bundle on macOS, or an install prefix on Linux."""
+    step("Opening Ladybird")
+    try:
+        if IS_MACOS:
+            subprocess.run(["open", str(path)], check=True)
+        else:
+            if hasattr(os, "geteuid") and os.geteuid() == 0:
+                say("    Not opening Ladybird as root. Open it yourself.")
+                return
+            subprocess.Popen([str(path / "bin" / "Ladybird")], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
+    except (OSError, subprocess.CalledProcessError) as error:
+        say(f"    Couldn't open Ladybird ({error}). Open it yourself.")
+
+
+# --- What the build needs --------------------------------------------------------------------------------------------
+
+BUILD_INSTRUCTIONS = "https://github.com/LadybirdBrowser/ladybird/blob/master/Documentation/BuildInstructionsLadybird.md"
+MINIMUM_XCODE = 26
+MINIMUM_FREE_GB = 40
+
+# From Ladybird's build instructions.
+BREW_PACKAGES = ["autoconf", "autoconf-archive", "automake", "ccache", "cmake", "libtool", "make", "nasm", "ninja",
+                 "pkg-config"]
+APT_PACKAGES = ["autoconf", "autoconf-archive", "automake", "build-essential", "ccache", "cmake", "curl",
+                "fonts-liberation2", "git", "glslang-tools", "libdrm-dev", "libgl1-mesa-dev", "libncurses-dev",
+                "libpulse-dev", "libtool", "libwayland-dev", "libxcb-icccm4-dev", "nasm", "ninja-build", "pkg-config",
+                "python3-venv", "qt6-base-dev", "qt6-positioning-dev", "qt6-tools-dev-tools", "qt6-wayland", "tar",
+                "unzip", "zip"]
+
+HOMEBREW_INSTALL = '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+RUSTUP_INSTALL = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+
+
+class Missing:
+    """A requirement that isn't met, with the commands that would meet it, or what to do by hand when there are none."""
+
+    def __init__(self, name: str, commands: list[list[str]] | None = None, manual: str | None = None):
+        self.name, self.commands, self.manual = name, commands or [], manual
+
+
+def add_to_path(*directories: Path) -> None:
+    """Make tools installed while this runs findable. They go last, so they don't change which tools come first."""
+    parts = os.environ.get("PATH", "").split(os.pathsep)
+    for directory in directories:
+        if directory.is_dir() and str(directory) not in parts:
+            parts.append(str(directory))
+    os.environ["PATH"] = os.pathsep.join(parts)
+
+
+def find_tool_locations() -> None:
+    add_to_path(Path("/opt/homebrew/bin"), Path("/usr/local/bin"), Path.home() / ".cargo" / "bin")
+    if shutil.which("brew"):
+        # Homebrew's rustup is keg-only, so it isn't on the PATH by itself.
+        prefix = subprocess.run(["brew", "--prefix", "rustup"], text=True, capture_output=True)
+        if prefix.returncode == 0 and prefix.stdout.strip():
+            add_to_path(Path(prefix.stdout.strip()) / "bin")
+
+
+def free_gigabytes(path: Path) -> float:
+    while not path.exists():
+        path = path.parent
+    return shutil.disk_usage(path).free / 1e9
+
+
+def missing_requirements(source: Path, build: bool) -> list[Missing]:
+    find_tool_locations()
+    missing: list[Missing] = []
+    if not shutil.which("git"):
+        missing.append(Missing("git", [["xcode-select", "--install"]] if IS_MACOS else
+                               ([["sudo", "apt", "install", "-y", "git"]] if shutil.which("apt") else None),
+                               manual="Install git with your package manager."))
+    if not build:
+        return missing
+
+    if IS_MACOS:
+        xcode = subprocess.run(["xcodebuild", "-version"], text=True, capture_output=True)
+        version = xcode.stdout.split()[1] if xcode.returncode == 0 and len(xcode.stdout.split()) > 1 else ""
+        if xcode.returncode != 0:
+            app = Path("/Applications/Xcode.app")
+            if app.is_dir():
+                missing.append(Missing(f"Xcode selected as the developer tools (it is at {app})",
+                                       [["sudo", "xcode-select", "--switch", str(app / "Contents" / "Developer")]]))
+            else:
+                missing.append(Missing(f"Xcode {MINIMUM_XCODE} or newer", [["open", "macappstore://apps.apple.com/app/id497799835"]],
+                                       manual="Install Xcode from the App Store, open it once to finish its setup, "
+                                              "then run this again."))
+        elif not version.split(".")[0].isdigit() or int(version.split(".")[0]) < MINIMUM_XCODE:
+            missing.append(Missing(f"Xcode {MINIMUM_XCODE} or newer (you have {version or 'an unknown version'})",
+                                   [["open", "macappstore://apps.apple.com/app/id497799835"]],
+                                   manual="Update Xcode from the App Store, open it once, then run this again."))
+        elif subprocess.run(["xcodebuild", "-license", "check"], capture_output=True).returncode != 0:
+            missing.append(Missing("Xcode's license accepted", [["sudo", "xcodebuild", "-license", "accept"]]))
+
+        if not shutil.which("brew"):
+            missing.append(Missing("Homebrew", [["/bin/bash", "-c", HOMEBREW_INSTALL]]))
+        else:
+            packages = [name for name in BREW_PACKAGES
+                        if subprocess.run(["brew", "list", "--versions", name], capture_output=True).returncode != 0]
+            if packages:
+                missing.append(Missing("Homebrew packages: " + " ".join(packages), [["brew", "install", *packages]]))
+            if not shutil.which("rustup"):
+                missing.append(Missing("rustup (Ladybird's Rust)", [["brew", "install", "rustup"]]))
+    else:
+        if shutil.which("dpkg-query") and shutil.which("apt"):
+            packages = [name for name in APT_PACKAGES
+                        if "install ok installed" not in subprocess.run(
+                            ["dpkg-query", "-W", "-f=${Status}", name], text=True, capture_output=True).stdout]
+            if packages:
+                missing.append(Missing("Packages: " + " ".join(packages), [["sudo", "apt", "install", "-y", *packages]]))
+        else:
+            tools = [tool for tool in ("cmake", "ninja", "nasm", "pkg-config", "autoconf", "automake", "libtoolize",
+                                       "ccache", "curl", "zip", "unzip", "tar") if not shutil.which(tool)]
+            if tools:
+                missing.append(Missing("Build tools: " + " ".join(tools),
+                                       manual=f"Install them with your package manager; see {BUILD_INSTRUCTIONS}"))
+        if not (shutil.which("clang++") or shutil.which("g++")):
+            missing.append(Missing("A C++23 compiler (clang or gcc)", manual=f"See {BUILD_INSTRUCTIONS}"))
+        cmake = subprocess.run(["cmake", "--version"], text=True, capture_output=True) if shutil.which("cmake") else None
+        if cmake and cmake.returncode == 0:
+            numbers = cmake.stdout.split()[2].split(".") if len(cmake.stdout.split()) > 2 else []
+            if len(numbers) >= 2 and numbers[0].isdigit() and numbers[1].isdigit() and \
+                    (int(numbers[0]), int(numbers[1])) < (3, 30):
+                missing.append(Missing(f"CMake 3.30 or newer (you have {'.'.join(numbers)})",
+                                       manual=f"See {BUILD_INSTRUCTIONS} for how to get a newer CMake."))
+        if not shutil.which("rustup"):
+            missing.append(Missing("rustup (Ladybird's Rust)", [["/bin/sh", "-c", RUSTUP_INSTALL]]))
+
+    # A first build needs tens of gigabytes. One that was built before needs far less.
+    if not (source / BUILD_DIR_FOR_PRESET).is_dir():
+        free = free_gigabytes(source)
+        if free < MINIMUM_FREE_GB:
+            missing.append(Missing(f"{MINIMUM_FREE_GB} GB of free disk space for the build (there is {free:.0f} GB)",
+                                   manual="Free up space, or put the build on another disk with --work-dir."))
+    return missing
+
+
+def ask(question: str, assume_yes: bool) -> bool:
+    if assume_yes:
+        say(f"{question} yes (--yes)")
+        return True
+    if not sys.stdin.isatty():
+        return False
+    try:
+        return input(question + " ").strip().lower() in ("y", "yes")
+    except EOFError:
+        return False
+
+
+def ensure_requirements(source: Path, build: bool, assume_yes: bool) -> None:
+    """Check what the build needs. Offer to install what is missing, or stop."""
+    step("Checking what the build needs")
+    missing = missing_requirements(source, build)
+    attempted: set[str] = set()
+    while missing:
+        say("    These are missing:")
+        for item in missing:
+            say(f"      - {item.name}")
+        installable = [item for item in missing if item.commands and item.name not in attempted]
+        manual = [item for item in missing if not item.commands or item.name in attempted]
+
+        if installable:
+            say("\n    To install them, this would run:")
+            for item in installable:
+                for command in item.commands:
+                    say("      $ " + " ".join(command))
+            if any(command[0] == "sudo" for item in installable for command in item.commands):
+                say("    Commands that start with sudo ask for your password.")
+            if not ask("\n    Install them now? [y = install, N = cancel]", assume_yes):
+                raise InstallError("Cancelled. Nothing was installed or changed.\n"
+                                   f"       Ladybird's build instructions list what it needs: {BUILD_INSTRUCTIONS}")
+            for item in installable:
+                attempted.add(item.name)
+                for command in item.commands:
+                    run(command, check=False)
+            if any(item.manual for item in installable):
+                for item in installable:
+                    if item.manual:
+                        say(f"    {item.name}: {item.manual}")
+                raise InstallError("Finish the steps above, then run this again.")
+        else:
+            for item in manual:
+                if item.name in attempted:
+                    say(f"    {item.name}: installing it didn't work. The output above says why.")
+                elif item.manual:
+                    say(f"    {item.name}: {item.manual}")
+            raise InstallError("Sort out the items above, then run this again.")
+
+        say("\n    Checking again")
+        missing = missing_requirements(source, build)
+    say("    Everything the build needs is installed.")
+
+
 # --- The source ------------------------------------------------------------------------------------------------------
 
 
@@ -543,7 +737,7 @@ def install_linux(installation: Installation, stage: Path, backups: Path) -> dic
     return {"platform": "linux", "prefix": str(prefix), "backup": str(backup), "replaced": replaced, "added": added}
 
 
-def restore(work_dir: Path) -> None:
+def restore(work_dir: Path) -> Path:
     state_path = state_file(work_dir)
     if not state_path.exists():
         raise InstallError(f"There is no record of an install in {work_dir}, so there is nothing to restore.")
@@ -577,6 +771,7 @@ def restore(work_dir: Path) -> None:
 
     state_path.rename(state_path.with_suffix(".restored.json"))
     say("\nThe Ladybird you had before is back. Your profiles were not changed.")
+    return Path(state["app"] if state["platform"] == "macos" else state["prefix"])
 
 
 def report_profiles(profiles: dict[str, set[str]]) -> None:
@@ -638,6 +833,7 @@ def main() -> int:
     parser.add_argument("--build-only", action="store_true", help="Build, but don't install")
     parser.add_argument("--yes", "-y", action="store_true", help="Don't ask before replacing the installed Ladybird")
     parser.add_argument("--restore", action="store_true", help="Put back the Ladybird that the last install replaced")
+    parser.add_argument("--no-launch", action="store_true", help="Don't open Ladybird when the install or restore is done")
     parser.add_argument("--refresh-patch", metavar="DIR", help="For working on the features: replace patches/ with the changes in this checkout")
     args = parser.parse_args()
 
@@ -645,14 +841,14 @@ def main() -> int:
 
     try:
         if args.restore:
-            restore(work_dir)
+            restored = restore(work_dir)
+            if not args.no_launch:
+                launch_ladybird(restored)
             return 0
         if args.refresh_patch:
             refresh_patch(Path(args.refresh_patch).expanduser().resolve())
             return 0
 
-        if not shutil.which("git"):
-            raise InstallError("git is needed.")
         if not PATCH.exists() or not BASE.exists():
             raise InstallError(f"{PATCH.parent} is incomplete. Download this project again.")
         if args.source and args.ref:
@@ -672,6 +868,9 @@ def main() -> int:
         step("Looking for your profiles")
         profiles_before = existing_profiles()
         report_profiles(profiles_before)
+
+        ensure_requirements(Path(args.source).expanduser().resolve() if args.source else work_dir / "ladybird",
+                            build=not args.dry_run, assume_yes=args.yes)
 
         if installation and not args.build_only and not args.dry_run:
             wait_for_ladybird_to_quit()
@@ -716,6 +915,8 @@ def main() -> int:
         if IS_MACOS:
             say("    Updating Ladybird from its own updater puts back a Ladybird without these features; run this "
                 "script again afterwards. Your profiles are kept either way.")
+        if not args.no_launch:
+            launch_ladybird(installation.path)
         return 0
     except InstallError as error:
         say(f"\nerror: {error}")

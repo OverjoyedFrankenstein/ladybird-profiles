@@ -118,11 +118,28 @@ For how it all works inside Ladybird, see [docs/Profiles.md](docs/Profiles.md).
 - **Time and disk space.** The first build takes a long time, often an hour or more, and needs tens of gigabytes
   free. Later runs reuse the build and are much faster.
 
+You don't have to set up the build tools yourself. Before it downloads or builds anything, the installer checks for
+them and lists anything that's missing, with the exact commands that would install it. Answer `y` to run them, or press
+Enter to cancel without changing anything.
+
+| Checked | On macOS it offers to | On Linux it offers to |
+| --- | --- | --- |
+| git | Install the Xcode command line tools | `sudo apt install git` |
+| Xcode 26 or newer | Open Xcode in the App Store. Install it, open it once, then run the installer again | – |
+| Xcode selected and its license accepted | `sudo xcode-select --switch …`, `sudo xcodebuild -license accept` | – |
+| Homebrew | Run Homebrew's official installer | – |
+| Ladybird's build packages | `brew install …` for the missing ones | `sudo apt install …` for the missing ones (Debian and Ubuntu) |
+| rustup | `brew install rustup` | rustup's official installer |
+| A C++23 compiler, CMake 3.30 or newer | – | Tell you what to install |
+| 40 GB free for a first build | Tell you to free space or use `--work-dir` | Same |
+
+After installing, it checks again and carries on only when everything is there. `--yes` answers yes to this
+question too. A dry run checks only for git.
+
 ## How to install
 
 1. Download or clone this repository.
-2. Quit Ladybird completely: every window of every profile.
-3. From this folder, run:
+2. From this folder, run:
 
    ```sh
    python3 install.py
@@ -131,13 +148,16 @@ For how it all works inside Ladybird, see [docs/Profiles.md](docs/Profiles.md).
 The script prints each step as it goes:
 
 - It shows the Ladybird it found and the profiles you already have.
+- It checks for the build tools, and offers to install any that are missing.
+- If Ladybird is open, it says **Close Ladybird for the patch to take place** and waits for you to quit it.
 - It downloads the Ladybird source and applies the patch.
 - It builds. This is the long part.
 - It asks before replacing your Ladybird. Answer `y` to install.
 - It backs up your current Ladybird and installs the new one.
 - It confirms that all your profiles are still there.
+- It opens the new Ladybird. Add `--no-launch` if you don't want that.
 
-Then open Ladybird. You'll find the **Profiles** menu in the menu bar and **Profile management** in `about:settings`.
+You'll find the **Profiles** menu in the menu bar and **Profile management** in `about:settings`.
 
 ### Or run it straight from GitHub
 
@@ -194,6 +214,7 @@ with `--profile=<name>`.
 | `--build-only` | Build, but don't install. |
 | `--yes`, `-y` | Don't ask before replacing your Ladybird. |
 | `--restore` | Put back the Ladybird that the last install replaced. |
+| `--no-launch` | Don't open Ladybird when the install or restore is done. |
 | `--app PATH` | macOS: the `Ladybird.app` to upgrade. Default: `/Applications/Ladybird.app`, then `~/Applications/Ladybird.app`. |
 | `--prefix DIR` | Linux: the install prefix of Ladybird, such as `/usr/local`. Default: found from the `Ladybird` on your `PATH`. |
 | `--source DIR` | Patch and build a Ladybird checkout you already have instead of downloading one. It needs no uncommitted changes. |
