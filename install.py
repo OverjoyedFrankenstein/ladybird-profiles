@@ -178,6 +178,53 @@ def ladybird_is_running() -> bool:
     return subprocess.run(["pgrep", "-x", "Ladybird"], stdout=subprocess.DEVNULL).returncode == 0
 
 
+def wait_for_key(seconds: int) -> None:
+    """Count down from `seconds`, returning early if a key is pressed (only when run in a terminal)."""
+    import select
+    import time
+
+    interactive = sys.stdin.isatty() and sys.stdout.isatty()
+    old_settings = None
+    if interactive:
+        import termios
+        import tty
+        try:
+            old_settings = termios.tcgetattr(sys.stdin)
+            tty.setcbreak(sys.stdin.fileno())
+        except termios.error:
+            interactive = False
+    try:
+        for remaining in range(seconds, 0, -1):
+            if interactive:
+                print(f"\r    Trying again in {remaining:2d}s (press any key to try now, Ctrl+C to stop) ",
+                      end="", flush=True)
+                ready, _, _ = select.select([sys.stdin], [], [], 1)
+                if ready:
+                    os.read(sys.stdin.fileno(), 1024)  # Swallow the key press.
+                    break
+            else:
+                if remaining == seconds or remaining % 10 == 0:
+                    print(f"    Trying again in {remaining}s...", flush=True)
+                time.sleep(1)
+    finally:
+        if old_settings is not None:
+            import termios
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        if interactive:
+            print()
+
+
+def wait_for_ladybird_to_quit() -> None:
+    """Block until Ladybird is not running, rechecking every 30 seconds or when a key is pressed."""
+    if not ladybird_is_running():
+        return
+    while ladybird_is_running():
+        say("\nClose Ladybird for the patch to take place.")
+        say("    Quit every window of every profile (Ladybird > Quit Ladybird, or Cmd+Q).")
+        wait_for_key(30)
+    say("Ladybird is closed. Continuing.")
+
+
 # --- The source ------------------------------------------------------------------------------------------------------
 
 
@@ -500,8 +547,7 @@ def restore(work_dir: Path) -> None:
     state_path = state_file(work_dir)
     if not state_path.exists():
         raise InstallError(f"There is no record of an install in {work_dir}, so there is nothing to restore.")
-    if ladybird_is_running():
-        raise InstallError("Quit Ladybird first.")
+    wait_for_ladybird_to_quit()
     state = json.loads(state_path.read_text())
 
     if state["platform"] == "macos":
@@ -627,8 +673,8 @@ def main() -> int:
         profiles_before = existing_profiles()
         report_profiles(profiles_before)
 
-        if installation and not args.build_only and not args.dry_run and ladybird_is_running():
-            raise InstallError("Ladybird is running. Quit it (every window, and every profile) and run this again.")
+        if installation and not args.build_only and not args.dry_run:
+            wait_for_ladybird_to_quit()
 
         if args.source:
             source = Path(args.source).expanduser().resolve()
@@ -654,8 +700,7 @@ def main() -> int:
                 say("Nothing was installed.")
                 return 1
 
-        if ladybird_is_running():
-            raise InstallError("Ladybird was started during the build. Quit it and run this again; the build is kept.")
+        wait_for_ladybird_to_quit()
 
         backups = work_dir / "backups"
         state = install_macos(installation, built, backups) if IS_MACOS else install_linux(installation, built, backups)

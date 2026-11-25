@@ -139,6 +139,23 @@ The script prints each step as it goes:
 
 Then open Ladybird. You'll find the **Profiles** menu in the menu bar and **Profile management** in `about:settings`.
 
+### Or run it straight from GitHub
+
+This one command downloads the latest version of this repository to a temporary folder and runs the installer from
+there, so you don't need to keep a copy. The repository is private, so it uses the GitHub CLI (`gh auth login` first):
+
+```sh
+d=$(mktemp -d) && gh repo clone OverjoyedFrankenstein/ladybird-profiles "$d" -- -q && python3 "$d/install.py"
+```
+
+Put any installer options at the end, for example `python3 "$d/install.py" --restore`. The build, backups and install
+record live in the work directory (`~/Library/Caches/ladybird-profiles`), not next to the script, so `--restore`
+works from any copy.
+
+If Ladybird is open, the installer says **Close Ladybird for the patch to take place** and counts down from 30. It
+checks again when the countdown ends or when you press a key, and carries on once Ladybird is closed. Press Ctrl+C to
+stop without changing anything.
+
 To check that everything will work before committing to a long build, start with a dry run. It finds your Ladybird
 and profiles, downloads the source and applies the patch, but builds and installs nothing:
 
